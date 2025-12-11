@@ -3,7 +3,8 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 import type { Request, Response } from "express";
 import type { IncomingMessage } from "http";
 
-const PYTHON_BACKEND_URL = "http://localhost:8000";
+const PYTHON_BACKEND_URL = "https://interex-home-loan-backend.onrender.com";
+
 
 export function setupPythonProxy(app: Express) {
   app.use(
