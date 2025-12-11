@@ -41,8 +41,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<User | null>({
     queryKey: ["/api/auth/me"],
     queryFn: async () => {
+      // Use the API_BASE_URL for the initial auth check
+      const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+      const url = `${API_BASE_URL}/api/auth/me`;
+      
       try {
-        const res = await fetch("/api/auth/me", { credentials: "include" });
+        const res = await fetch(url, { credentials: "include" }); // Use the full URL
 
         if (res.status === 401) return null; // Not logged in
         if (!res.ok) throw new Error("Failed to fetch user");
