@@ -1,4 +1,10 @@
-import { createContext, useContext, ReactNode, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useEffect,
+} from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -44,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Use the API_BASE_URL for the initial auth check
       const API_BASE_URL = import.meta.env.VITE_API_URL || "";
       const url = `${API_BASE_URL}/api/auth/me`;
-      
+
       try {
         const res = await fetch(url, { credentials: "include" }); // Use the full URL
 
@@ -82,7 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: string;
       password: string;
     }) => {
-      const res = await fetch("/api/auth/login", {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || "";
+
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
