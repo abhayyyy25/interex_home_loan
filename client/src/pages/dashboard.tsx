@@ -22,6 +22,7 @@ import { formatIndianCurrency, formatReadableDate } from "@/lib/utils";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/navbar";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Loan {
   id: number;
@@ -50,43 +51,29 @@ interface Notification {
   created_at: string;
 }
 
-interface User {
-  id: string;
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-  role: string;
-  subscription_tier: string;
-}
-
 export default function Dashboard() {
-// Fetch current user
-const { data: user } = useQuery<User>({
-  queryKey: ['/auth/me'],
-  queryFn: async () => {
-    const res = await apiRequest("GET", "/api/auth/me");
-    return res.json();
-  },
-});
+  // Get user from AuthContext (already fetched and cached)
+  const { user } = useAuth();
 
+  // Fetch loans - only when user is authenticated
+  const { data: loans = [], isLoading: loansLoading } = useQuery<Loan[]>({
+    queryKey: ['/loans'],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/loans/");
+      return res.json();
+    },
+    enabled: !!user, // Only fetch when user is authenticated
+  });
 
-// Fetch loans
-const { data: loans = [], isLoading: loansLoading } = useQuery<Loan[]>({
-  queryKey: ['/loans'],
-  queryFn: async () => {
-    const res = await apiRequest("GET", "/api/loans");
-    return res.json();
-  },
-});
-
-// Fetch notifications
-const { data: notifications = [], isLoading: notificationsLoading } = useQuery<Notification[]>({
-  queryKey: ['/notifications'],
-  queryFn: async () => {
-    const res = await apiRequest("GET", "/api/notifications");
-    return res.json();
-  },
-});
+  // Fetch notifications - only when user is authenticated
+  const { data: notifications = [], isLoading: notificationsLoading } = useQuery<Notification[]>({
+    queryKey: ['/notifications'],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/notifications/");
+      return res.json();
+    },
+    enabled: !!user, // Only fetch when user is authenticated
+  });
 
 
   const totalLoans = loans.length;

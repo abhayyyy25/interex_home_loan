@@ -40,6 +40,6 @@ async def seed_bank_rates():
 
         db.add_all(rates)
         await db.commit()
-        print("✅ Bank rates inserted successfully!")
+        print("[OK] Bank rates inserted successfully!")
 
 asyncio.run(seed_bank_rates())

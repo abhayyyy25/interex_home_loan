@@ -23,7 +23,7 @@ export default function LoanDetail() {
   const { data: loan, isLoading } = useQuery({
     queryKey: ["loan", loanId],
     queryFn: async () => {
-      const res = await apiRequest("GET", `/api/loans/${loanId}`);  // FIXED
+      const res = await apiRequest("GET", `/api/loans/${loanId}/`);
       return res.json();
     },
   });

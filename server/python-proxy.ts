@@ -3,7 +3,7 @@ import { createProxyMiddleware } from "http-proxy-middleware";
 import type { Request, Response } from "express";
 import type { IncomingMessage } from "http";
 
-const PYTHON_BACKEND_URL = "https://interex-home-loan-backend.onrender.com";
+const PYTHON_BACKEND_URL = "http://127.0.0.1:8000";
 
 
 export function setupPythonProxy(app: Express) {
@@ -13,9 +13,15 @@ export function setupPythonProxy(app: Express) {
       target: PYTHON_BACKEND_URL,
       changeOrigin: true,
       ws: false,
-      pathRewrite: { "^/api": "" },
+      pathRewrite: (path, req) => {
+        const newPath = path.replace(/^\/api/, "");
+        console.log(`[Proxy] Rewriting path: ${path} → ${newPath}`);
+        return newPath;
+      },
 
       onProxyReq: (proxyReq, req: Request, res: Response) => {
+        console.log(`[Proxy] ${req.method} ${req.originalUrl} → ${PYTHON_BACKEND_URL}${proxyReq.path}`);
+        
         const cookie = req.headers.cookie;
         if (cookie) {
           proxyReq.setHeader("Cookie", cookie);

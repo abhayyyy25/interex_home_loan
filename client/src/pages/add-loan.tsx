@@ -39,7 +39,7 @@ export default function AddLoan() {
 
   const createLoanMutation = useMutation({
     mutationFn: async (loanData: any) => {
-      const res = await apiRequest("POST", "/api/loans", loanData);
+      const res = await apiRequest("POST", "/api/loans/", loanData);
       return res.json();
     },
     onSuccess: () => {

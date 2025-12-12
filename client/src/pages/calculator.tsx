@@ -49,7 +49,7 @@ export default function Calculator() {
     queryKey: ['/api/calculator/prepayment', calculationKey],
     enabled: calculationKey > 0 && loanAmount > 0 && prepaymentAmount > 0,
     queryFn: async () => {
-      const response = await apiRequest('POST', '/api/calculator/prepayment', {
+      const response = await apiRequest('POST', '/api/calculator/prepayment/', {
         loan_amount: loanAmount,
         interest_rate: interestRate,
         remaining_tenure_months: remainingTenure,

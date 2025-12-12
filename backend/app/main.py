@@ -4,57 +4,65 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .database import Base, engine
 
-import asyncio                                       # ✅ ADD
-from .services.market_simulator import run_market_simulator   # ✅ ADD
+import asyncio
+from .services.market_simulator import run_market_simulator
+
+# API prefix for all routes
+# API_PREFIX = "/api"
 
 # Create FastAPI app
+# CRITICAL: redirect_slashes=False prevents 307 redirects that drop auth cookies
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.VERSION,
     debug=settings.DEBUG,
+    redirect_slashes=False,
 )
 
 # CORS middleware - Allow frontend to make requests
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5000",
-        "http://localhost:5173",
-        "http://127.0.0.1:5000",
-        "http://127.0.0.1:5173",
-        "https://interex-home-loan-frontend.onrender.com"
-    ],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
 )
 
 @app.on_event("startup")
 async def startup():
-    """Startup tasks"""
-    
-    # 🔥 Start Market Simulator (Runs forever in background)
     loop = asyncio.get_event_loop()
     loop.create_task(run_market_simulator())
-
-    print("🔥 Market Simulator Running...")
+    print("[STARTUP] Market Simulator Running...")
 
 @app.get("/")
 async def root():
     return {
         "name": settings.APP_NAME,
         "version": settings.VERSION,
-        "status": "running"
+        "status": "running",
     }
 
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
 
-# Import and register API routers
-from .api.v1 import auth, loans, calculator, negotiations, notifications, admin, chat, reports, rates
 
+# Import Routers
+from .api.v1 import (
+    auth,
+    loans,
+    calculator,
+    negotiations,
+    notifications,
+    admin,
+    chat,
+    reports,
+    rates,
+)
+# ❌ REMOVE API_PREFIX completely
+# API_PREFIX = "/api"
+
+# ✅ No prefix — match what the proxy sends
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(loans.router, prefix="/loans", tags=["Loans"])
 app.include_router(calculator.router, prefix="/calculator", tags=["Calculator"])

@@ -67,7 +67,7 @@ export default function RatesPage() {
   const { data: repoRate, isLoading: repoLoading } = useQuery<RepoRate>({
     queryKey: ["/api/rates/repo/current"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/rates/repo/current");
+      const res = await apiRequest("GET", "/api/rates/repo/current/");
       return res.json();
     },
   });
@@ -76,7 +76,7 @@ export default function RatesPage() {
   const { data: bankRates, isLoading: banksLoading } = useQuery<{ rates: BankRate[] }>({
     queryKey: ["/api/rates/banks/current"],
     queryFn: async () => {
-       const res = await apiRequest("GET", "/api/rates/banks/current");
+       const res = await apiRequest("GET", "/api/rates/banks/current/");
        return res.json();
       }
   });
@@ -84,7 +84,7 @@ export default function RatesPage() {
   const { data: comparison, isLoading: comparisonLoading } = useQuery<RateComparison>({
     queryKey: ["/api/rates/comparison"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/rates/comparison");
+      const res = await apiRequest("GET", "/api/rates/comparison/");
       return res.json();
     },
   });
@@ -92,7 +92,7 @@ export default function RatesPage() {
   const { data: trends, isLoading: trendsLoading } = useQuery<Trends>({
     queryKey: ["/api/rates/trends"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/rates/trends");
+      const res = await apiRequest("GET", "/api/rates/trends/");
       return res.json();
     },
   });

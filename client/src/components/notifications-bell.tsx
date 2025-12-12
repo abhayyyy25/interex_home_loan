@@ -36,14 +36,18 @@ export function NotificationsBell() {
   const [open, setOpen] = useState(false);
 
   const { data: notifications = [], isLoading } = useQuery<Notification[]>({
-    queryKey: ['/api/notifications'],  // ← correct
+    queryKey: ['/api/notifications'],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/notifications/");
+      return res.json();
+    },
   });
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: number) => {
-      await apiRequest("PATCH", `/api/notifications/${notificationId}/read`);
+      await apiRequest("PATCH", `/api/notifications/${notificationId}/read/`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
@@ -53,7 +57,7 @@ export function NotificationsBell() {
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/notifications/mark-all-read");
+      await apiRequest("POST", "/api/notifications/mark-all-read/");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });

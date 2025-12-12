@@ -60,7 +60,7 @@ async def seed_repo_rates():
             db.add(rate)
         
         await db.commit()
-        print(f"✓ Added {len(repo_rates)} repo rates")
+        print(f"[OK] Added {len(repo_rates)} repo rates")
 
 
 async def seed_bank_rates():
@@ -181,7 +181,7 @@ async def seed_bank_rates():
             db.add(rate)
         
         await db.commit()
-        print(f"✓ Added {len(bank_rates)} bank rates")
+        print(f"[OK] Added {len(bank_rates)} bank rates")
 
 
 async def main():
@@ -189,7 +189,7 @@ async def main():
     print("Seeding rate data...")
     await seed_repo_rates()
     await seed_bank_rates()
-    print("✓ Rate data seeding complete!")
+    print("[OK] Rate data seeding complete!")
 
 
 if __name__ == "__main__":

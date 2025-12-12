@@ -19,7 +19,7 @@ router = APIRouter()
 client = OpenAI(api_key=settings.OPENAI_API_KEY)   # ✅ FIXED: initialize client ONCE
 
 
-@router.get("/session/{session_id}")
+@router.get("/session/{session_id}/")
 async def get_session(
     session_id: int,
     current_user: User = Depends(get_current_user),

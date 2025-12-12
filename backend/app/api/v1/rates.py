@@ -48,7 +48,7 @@ class RateComparisonResponse(BaseModel):
     banks_below_user_rate: List[BankRateResponse]
 
 
-@router.get("/repo/current")
+@router.get("/repo/current/")
 async def get_current_repo_rate(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -77,7 +77,7 @@ async def get_current_repo_rate(
     }
 
 
-@router.get("/repo/history")
+@router.get("/repo/history/")
 async def get_repo_rate_history(
     limit: int = Query(12, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
@@ -106,7 +106,7 @@ async def get_repo_rate_history(
     }
 
 
-@router.get("/banks/current")
+@router.get("/banks/current/")
 async def get_current_bank_rates(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -160,7 +160,7 @@ async def get_current_bank_rates(
     }
 
 
-@router.get("/comparison")
+@router.get("/comparison/")
 async def get_rate_comparison(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -215,7 +215,7 @@ async def get_rate_comparison(
     }
 
 
-@router.get("/trends")
+@router.get("/trends/")
 async def get_rate_trends(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)

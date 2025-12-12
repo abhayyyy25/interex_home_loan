@@ -79,7 +79,7 @@ export default function AdminDashboard() {
   } = useQuery<AdminStats>({
     queryKey: ["/api/admin/stats"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/admin/stats");
+      const res = await apiRequest("GET", "/api/admin/stats/");
       return res.json();
     },
   });
@@ -92,7 +92,7 @@ export default function AdminDashboard() {
   } = useQuery<AdminNegotiation[]>({
     queryKey: ["/api/negotiations/admin/all"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/negotiations/admin/all");
+      const res = await apiRequest("GET", "/api/negotiations/admin/all/");
       return res.json();
     },
   });
@@ -104,7 +104,7 @@ export default function AdminDashboard() {
   } = useQuery<AdminUser[]>({
     queryKey: ["/api/admin/users"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/admin/users");
+      const res = await apiRequest("GET", "/api/admin/users/");
       return res.json();
     },
   });

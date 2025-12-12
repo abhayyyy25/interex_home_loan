@@ -15,7 +15,7 @@ from ...services.notification_service import NotificationService
 router = APIRouter()
 
 
-@router.get("/stats")
+@router.get("/stats/")
 async def get_admin_stats(
     current_user: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db)
@@ -95,7 +95,7 @@ async def get_admin_stats(
         "total_savings_generated": round(total_savings),
     }
 
-@router.get("/users")
+@router.get("/users/")
 async def get_all_users(
     current_user: User = Depends(require_admin),
     db: AsyncSession = Depends(get_db)
@@ -302,7 +302,7 @@ async def create_demo_notifications(
     }
 # --- ADD THIS TO THE BOTTOM OF admin.py ---
 
-@router.post("/promote-me-to-admin")
+@router.post("/promote-me-to-admin/")
 async def make_me_admin(
     email: str,
     db: AsyncSession = Depends(get_db)
@@ -329,7 +329,7 @@ async def make_me_admin(
         "new_role": user.role,
         "new_tier": user.subscription_tier
     }
-@router.post("/force-password-reset")
+@router.post("/force-password-reset/")
 async def force_password_reset(
     email: str,
     new_password: str,

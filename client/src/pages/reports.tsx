@@ -159,7 +159,7 @@ export default function Reports() {
   } = useQuery<Summary>({
     queryKey: ["reports-summary"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/reports/summary");
+      const res = await apiRequest("GET", "/api/reports/summary/");
       return await res.json();
     },    
   });

@@ -1,12 +1,9 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
 import { setupPythonProxy } from "./python-proxy";
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express): Promise<void> {
   // Proxy all /api/* requests to Python FastAPI backend
   setupPythonProxy(app);
 
-  const httpServer = createServer(app);
-
-  return httpServer;
+  console.log("[Routes] Python Proxy mounted at /api");
 }

@@ -33,7 +33,7 @@ export default function NegotiationDetail() {
   const { data: negotiation, isLoading } = useQuery<Negotiation>({
     queryKey: ["/api/negotiations", negotiationId],
     queryFn: async () => {
-      const response = await fetch(`/api/negotiations/${negotiationId}`, {
+      const response = await fetch(`/api/negotiations/${negotiationId}/`, {
         credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to fetch negotiation");

@@ -89,7 +89,7 @@ else:
     }
 
 # CREATE ENGINE
-print("[DB] Creating async engine…")
+print("[DB] Creating async engine...")
 engine = create_async_engine(async_url, **engine_config)
 print("[DB] Engine created successfully")
 
@@ -120,7 +120,7 @@ async def get_db():
 
 # Test connection
 async def test_connection():
-    print("[DB] Testing DB connection…")
+    print("[DB] Testing DB connection...")
     try:
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))

@@ -25,7 +25,7 @@ AsyncSessionLocal = async_sessionmaker(
 # otherwise uses Loan data for bank rates.
 # -------------------------------------------
 async def run_market_simulator():
-    logger.info("🔥 Hybrid Market Simulator Running... (every 30 sec)")
+    logger.info("[MARKET] Hybrid Market Simulator Running... (every 30 sec)")
 
     while True:
         async with AsyncSessionLocal() as db:
@@ -39,7 +39,7 @@ async def run_market_simulator():
                 loans = loans_result.scalars().all()
 
                 if not loans:
-                    logger.warning("⚠️ No loans found. Nothing to simulate.")
+                    logger.warning("[WARN] No loans found. Nothing to simulate.")
                     await asyncio.sleep(3600)
                     continue
 
@@ -53,11 +53,11 @@ async def run_market_simulator():
                 bank_rate_source = {}
 
                 if bankrate_entries:
-                    logger.info("✔ Using BankRate table for rate simulation.")
+                    logger.info("[OK] Using BankRate table for rate simulation.")
                     for b in bankrate_entries:
                         bank_rate_source[b.bank_name] = float(b.interest_rate)
                 else:
-                    logger.warning("⚠️ No BankRate entries found — Falling back to Loan rates.")
+                    logger.warning("[WARN] No BankRate entries found - Falling back to Loan rates.")
                     for loan in loans:
                         bank_rate_source.setdefault(loan.bank_name, float(loan.interest_rate))
 
@@ -76,7 +76,7 @@ async def run_market_simulator():
                     if not (6.0 <= new_rate <= 12.0):
                         continue
 
-                    logger.info(f"📈 RATE UPDATE: {bank_name}: {old_rate}% → {new_rate}%")
+                    logger.info(f"[RATE] UPDATE: {bank_name}: {old_rate}% -> {new_rate}%")
 
                     # ===========================
                     # CASE A — BankRate table exists
@@ -104,13 +104,13 @@ async def run_market_simulator():
                                 new_rate=Decimal(str(new_rate)),
                                 loan_id=loan.id
                             )
-                            logger.info(f"   🔔 Notification → Loan {loan.id} user {loan.user_id}")
+                            logger.info(f"   [NOTIFY] Loan {loan.id} user {loan.user_id}")
 
                 await db.commit()
-                logger.info("💾 Hybrid simulator saved updates & notifications.\n")
+                logger.info("[SAVED] Hybrid simulator saved updates & notifications.\n")
 
             except Exception as e:
-                logger.error(f"❌ Simulator Error: {e}")
+                logger.error(f"[ERROR] Simulator Error: {e}")
                 import traceback
                 traceback.print_exc()
                 await db.rollback()

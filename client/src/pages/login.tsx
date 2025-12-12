@@ -27,11 +27,8 @@ export default function Login() {
         description: "Welcome back to Interex!",
       });
       
-      // CRITICAL FIX: Delay redirect to allow React Query to update
-      // This prevents race conditions between query update and redirect
-      setTimeout(() => {
-        setLocation("/dashboard");
-      }, 150);
+      // Navigate immediately - AuthContext handles state synchronization
+      setLocation("/dashboard");
     } catch (error: any) {
       toast({
         title: "Login Failed",
@@ -40,7 +37,6 @@ export default function Login() {
       });
       setIsLoading(false);
     }
-    // Note: Don't set isLoading to false on success - let redirect happen
   };
 
   return (

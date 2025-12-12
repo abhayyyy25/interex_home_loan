@@ -33,7 +33,7 @@ async def authenticate_user(db: AsyncSession, email: str, password: str):
 router = APIRouter()
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     """Register a new user with comprehensive error handling"""
     import time
@@ -142,7 +142,7 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
 
 from fastapi.responses import JSONResponse
 
-@router.post("/login", response_model=UserResponse)
+@router.post("/login/", response_model=UserResponse)
 async def login(
     login_data: UserLogin,
     response: Response,
@@ -188,13 +188,13 @@ async def login(
 
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me/", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current user information"""
     return current_user
 
 
-@router.post("/logout")
+@router.post("/logout/")
 async def logout(response: Response):
     """Clear authentication cookie"""
     response.delete_cookie(key="access_token")

@@ -14,7 +14,7 @@ from .auth import get_current_user
 router = APIRouter()  # ❌ NO prefix here
 
 
-@router.get("/generate")
+@router.get("/generate/")
 async def generate_report(
     report_type: str = Query(..., regex="^(monthly|annual)$"),
     period: Optional[str] = Query(None, description="Format: YYYY-MM for monthly, YYYY for annual"),
@@ -87,7 +87,7 @@ async def generate_report(
     }
 
 
-@router.get("/list")
+@router.get("/list/")
 async def list_reports(
     report_type: Optional[str] = Query(None, regex="^(monthly|annual)$"),
     db: AsyncSession = Depends(get_db),
@@ -119,7 +119,7 @@ async def list_reports(
     ]
 
 
-@router.get("/summary")
+@router.get("/summary/")
 async def get_summary(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)

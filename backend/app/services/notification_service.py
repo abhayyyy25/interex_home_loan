@@ -282,7 +282,7 @@ class NotificationService:
                 db=db,
                 user_id=user_id,
                 notification_type=NotificationType.MILESTONE,
-                title="👋 Welcome to Interex!",
+                title="Welcome to Interex!",
                 message=f"Your {loan.bank_name} loan has been added. We'll notify you about rate changes, prepayment opportunities, and milestones.",
                 meta_data={
                     "loan_id": loan.id,

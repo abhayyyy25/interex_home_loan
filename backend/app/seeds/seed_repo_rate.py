@@ -13,6 +13,6 @@ async def seed_repo_rate():
         )
         db.add(repo)
         await db.commit()
-        print("✅ Repo Rate inserted successfully!")
+        print("[OK] Repo Rate inserted successfully!")
 
 asyncio.run(seed_repo_rate())

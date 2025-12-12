@@ -3,6 +3,20 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 // 1. Define your base URL using the environment variable
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
+// Track login timestamp to prevent 401 redirects immediately after login
+let lastLoginTimestamp = 0;
+const LOGIN_GRACE_PERIOD_MS = 5000; // 5 seconds grace period after login
+
+export function markLoginSuccess() {
+  lastLoginTimestamp = Date.now();
+}
+
+function shouldRedirectOn401(): boolean {
+  // Don't redirect if we just logged in (within grace period)
+  const timeSinceLogin = Date.now() - lastLoginTimestamp;
+  return timeSinceLogin > LOGIN_GRACE_PERIOD_MS;
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -27,9 +41,11 @@ export async function apiRequest(
     credentials: "include",
   });
 
-  // On 401, redirect to login
+  // On 401, redirect to login (only if not in login grace period)
   if (res.status === 401 && !url.includes('/auth/') && window.location.pathname !== '/login') {
-    window.location.href = '/login';
+    if (shouldRedirectOn401()) {
+      window.location.href = '/login';
+    }
   }
 
   await throwIfResNotOk(res);
@@ -55,8 +71,11 @@ export const getQueryFn: <T>(options: {
         return null;
       }
 
+      // Only redirect on 401 if not in login grace period
       if (res.status === 401 && !url.includes('/auth/') && window.location.pathname !== '/login') {
-        window.location.href = '/login';
+        if (shouldRedirectOn401()) {
+          window.location.href = '/login';
+        }
       }
 
       await throwIfResNotOk(res);

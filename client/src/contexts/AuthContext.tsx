@@ -4,9 +4,10 @@ import {
   ReactNode,
   useState,
   useEffect,
+  useRef,
 } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient, markLoginSuccess } from "@/lib/queryClient";
 
 interface User {
   id: string;
@@ -38,21 +39,29 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isBootstrapped, setIsBootstrapped] = useState(false);
+  // Track if user just logged in to prevent stale auth checks
+  const justLoggedInRef = useRef(false);
+  // Store user directly after login to prevent query race conditions
+  const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
 
   // Fetch current logged-in user
   const {
-    data: user,
+    data: queryUser,
     isLoading,
     isFetching,
   } = useQuery<User | null>({
     queryKey: ["/api/auth/me"],
     queryFn: async () => {
-      // Use the API_BASE_URL for the initial auth check
+      // If user just logged in, skip the fetch and use cached data
+      if (justLoggedInRef.current) {
+        return loggedInUser;
+      }
+
       const API_BASE_URL = import.meta.env.VITE_API_URL || "";
-      const url = `${API_BASE_URL}/api/auth/me`;
+      const url = `${API_BASE_URL}/api/auth/me/`;
 
       try {
-        const res = await fetch(url, { credentials: "include" }); // Use the full URL
+        const res = await fetch(url, { credentials: "include" });
 
         if (res.status === 401) return null; // Not logged in
         if (!res.ok) throw new Error("Failed to fetch user");
@@ -72,6 +81,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     gcTime: Infinity,
   });
 
+  // Use loggedInUser if available (from recent login), otherwise use query result
+  const user = loggedInUser || queryUser || null;
+
   // Bootstrap completed when first auth check finishes
   useEffect(() => {
     if (!isLoading && !isFetching) {
@@ -90,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }) => {
       const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
-      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -106,26 +118,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
 
     onSuccess: (userData) => {
-      // Immediately set current user
+      // Mark login success to prevent 401 redirects during grace period
+      markLoginSuccess();
+      
+      // Mark that user just logged in
+      justLoggedInRef.current = true;
+      
+      // Store user in state immediately
+      setLoggedInUser(userData);
+      
+      // Also set in query cache
       queryClient.setQueryData(["/api/auth/me"], userData);
 
       // Bootstrap is fully ready after login
       setIsBootstrapped(true);
 
-      // Optional delayed invalidate (no refetch)
+      // Reset the justLoggedIn flag after navigation is complete
       setTimeout(() => {
-        queryClient.invalidateQueries({
-          queryKey: ["/api/auth/me"],
-          refetchType: "none",
-        });
-      }, 150);
+        justLoggedInRef.current = false;
+      }, 2000);
     },
   });
 
   // REGISTER MUTATION
   const registerMutation = useMutation({
     mutationFn: async (data: RegisterData) => {
-      const res = await apiRequest("POST", "/api/auth/register", data);
+      const res = await apiRequest("POST", "/api/auth/register/", data);
       return res.json();
     },
     onSuccess: async (_, variables) => {
@@ -139,9 +157,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // LOGOUT MUTATION
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/auth/logout");
+      await apiRequest("POST", "/api/auth/logout/");
     },
     onSuccess: () => {
+      // Clear local state
+      setLoggedInUser(null);
+      justLoggedInRef.current = false;
+      
       queryClient.clear();
       window.location.href = "/login";
     },

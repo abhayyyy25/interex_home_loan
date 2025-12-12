@@ -53,7 +53,7 @@ export default function AdminNegotiations() {
     mutationFn: async (data: { id: number; admin_notes?: string }) => {
       const res = await apiRequest(
         "POST",
-        `/api/admin/negotiations/${data.id}/approve`,
+        `/api/admin/negotiations/${data.id}/approve/`,
         { admin_notes: data.admin_notes ?? null }
       );
       return res.json();
@@ -72,7 +72,7 @@ export default function AdminNegotiations() {
     mutationFn: async (data: { id: number; admin_notes?: string }) => {
       const res = await apiRequest(
         "POST",
-        `/api/admin/negotiations/${data.id}/reject`,
+        `/api/admin/negotiations/${data.id}/reject/`,
         { admin_notes: data.admin_notes ?? null }
       );
       return res.json();
