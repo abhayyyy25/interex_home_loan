@@ -3,6 +3,13 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 // 1. Define your base URL using the environment variable
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
+// CRITICAL: Ensure all API URLs have trailing slashes to prevent 307 redirects
+// 307 redirects drop cookies/headers, causing auth failures on Render
+function ensureTrailingSlash(url: string): string {
+  if (url.includes('?') || url.endsWith('/')) return url;
+  return `${url}/`;
+}
+
 // Track login timestamp to prevent 401 redirects immediately after login
 let lastLoginTimestamp = 0;
 const LOGIN_GRACE_PERIOD_MS = 5000; // 5 seconds grace period after login
@@ -31,8 +38,9 @@ export async function apiRequest(
 ): Promise<Response> {
   const headers: HeadersInit = data ? { "Content-Type": "application/json" } : {};
   
-  // 2. Prepend the base URL for mutations (login, register, logout, etc.)
-  const fullUrl = `${API_BASE_URL}${url}`;
+  // 2. Prepend the base URL and ensure trailing slash
+  const normalizedUrl = ensureTrailingSlash(url);
+  const fullUrl = `${API_BASE_URL}${normalizedUrl}`;
   
   const res = await fetch(fullUrl, {
     method,
@@ -60,8 +68,9 @@ export const getQueryFn: <T>(options: {
     async ({ queryKey }) => {
       const url = queryKey.join("/") as string;
       
-      // 3. Prepend the base URL for queries
-      const fullUrl = `${API_BASE_URL}${url}`;
+      // 3. Prepend the base URL and ensure trailing slash
+      const normalizedUrl = ensureTrailingSlash(url);
+      const fullUrl = `${API_BASE_URL}${normalizedUrl}`;
 
       const res = await fetch(fullUrl, {
         credentials: "include",
