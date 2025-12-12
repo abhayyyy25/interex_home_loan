@@ -26,6 +26,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["set-cookie"],  # Expose Set-Cookie for cross-origin
 )
 
 @app.on_event("startup")

@@ -168,12 +168,16 @@ async def login(
     )
 
     # Step 3: Set cookie
+    # Detect if running in production (Render) or localhost
+    import os
+    is_production = os.getenv("RENDER", "") == "true" or os.getenv("PRODUCTION", "") == "true"
+    
     response.set_cookie(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=False,        # because localhost
-        samesite="lax",
+        secure=is_production,           # True for HTTPS (Render), False for localhost
+        samesite="none" if is_production else "lax",  # "none" for cross-origin (Render)
         max_age=480 * 60,
         path="/",
     )
