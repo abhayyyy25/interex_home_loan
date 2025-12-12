@@ -13,11 +13,7 @@ export function setupPythonProxy(app: Express) {
       target: PYTHON_BACKEND_URL,
       changeOrigin: true,
       ws: false,
-      pathRewrite: (path, req) => {
-        const newPath = path.replace(/^\/api/, "");
-        console.log(`[Proxy] Rewriting path: ${path} → ${newPath}`);
-        return newPath;
-      },
+      // No pathRewrite - backend now has /api prefix for both localhost and Render
 
       onProxyReq: (proxyReq, req: Request, res: Response) => {
         console.log(`[Proxy] ${req.method} ${req.originalUrl} → ${PYTHON_BACKEND_URL}${proxyReq.path}`);

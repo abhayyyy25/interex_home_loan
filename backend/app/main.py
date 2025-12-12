@@ -59,16 +59,16 @@ from .api.v1 import (
     reports,
     rates,
 )
-# ❌ REMOVE API_PREFIX completely
-# API_PREFIX = "/api"
 
-# ✅ No prefix — match what the proxy sends
-app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
-app.include_router(loans.router, prefix="/loans", tags=["Loans"])
-app.include_router(calculator.router, prefix="/calculator", tags=["Calculator"])
-app.include_router(negotiations.router, prefix="/negotiations", tags=["Negotiations"])
-app.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
-app.include_router(admin.router, prefix="/admin", tags=["Admin"])
-app.include_router(chat.router, prefix="/chat", tags=["Chat"])
-app.include_router(reports.router, prefix="/reports", tags=["Reports"])
-app.include_router(rates.router, prefix="/rates", tags=["Rates"])
+# API prefix - works for both localhost (via proxy) and Render (direct calls)
+API_PREFIX = "/api"
+
+app.include_router(auth.router, prefix=f"{API_PREFIX}/auth", tags=["Authentication"])
+app.include_router(loans.router, prefix=f"{API_PREFIX}/loans", tags=["Loans"])
+app.include_router(calculator.router, prefix=f"{API_PREFIX}/calculator", tags=["Calculator"])
+app.include_router(negotiations.router, prefix=f"{API_PREFIX}/negotiations", tags=["Negotiations"])
+app.include_router(notifications.router, prefix=f"{API_PREFIX}/notifications", tags=["Notifications"])
+app.include_router(admin.router, prefix=f"{API_PREFIX}/admin", tags=["Admin"])
+app.include_router(chat.router, prefix=f"{API_PREFIX}/chat", tags=["Chat"])
+app.include_router(reports.router, prefix=f"{API_PREFIX}/reports", tags=["Reports"])
+app.include_router(rates.router, prefix=f"{API_PREFIX}/rates", tags=["Rates"])
