@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryKey: ["/api/auth/me"],
     queryFn: async () => {
       // If user just logged in, skip the fetch and use cached data
-      if (justLoggedInRef.current) {
+      if (justLoggedInRef.current || loggedInUser) {
         return loggedInUser;
       }
 
@@ -61,7 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const url = `${API_BASE_URL}/api/auth/me/`;
 
       try {
-        const res = await fetch(url, { credentials: "include" });
+        const res = await fetch(url, { 
+          credentials: "include",
+          headers: {
+            "Accept": "application/json",
+          },
+        });
 
         if (res.status === 401) return null; // Not logged in
         if (!res.ok) throw new Error("Failed to fetch user");
@@ -72,6 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
 
+    // Don't fetch if we already have a logged in user from recent login
+    enabled: !loggedInUser,
     retry: false,
     refetchOnMount: false,
     refetchOnWindowFocus: false,

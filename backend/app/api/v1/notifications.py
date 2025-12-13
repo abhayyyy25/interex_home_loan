@@ -28,7 +28,7 @@ async def get_notifications(
     return notifications
 
 
-@router.patch("/{notification_id}/read", status_code=status.HTTP_204_NO_CONTENT)
+@router.patch("/{notification_id}/read/", status_code=status.HTTP_204_NO_CONTENT)
 async def mark_as_read(
     notification_id: int,
     current_user: User = Depends(get_current_user),
@@ -45,7 +45,7 @@ async def mark_as_read(
     return None
 
 
-@router.post("/mark-all-read", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/mark-all-read/", status_code=status.HTTP_204_NO_CONTENT)
 async def mark_all_read(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
