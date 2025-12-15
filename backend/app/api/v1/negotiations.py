@@ -178,7 +178,7 @@ async def get_negotiations(
     return negotiations
 
 
-@router.get("/{negotiation_id}", response_model=NegotiationResponse)
+@router.get("/{negotiation_id}/", response_model=NegotiationResponse)
 async def get_negotiation(
     negotiation_id: int,
     current_user: User = Depends(get_current_user),
@@ -202,7 +202,7 @@ async def get_negotiation(
     return negotiation
 
 
-@router.patch("/{negotiation_id}/approve", response_model=NegotiationResponse)
+@router.patch("/{negotiation_id}/approve/", response_model=NegotiationResponse)
 async def approve_negotiation(
     negotiation_id: int,
     approval: NegotiationApproval,
@@ -254,7 +254,7 @@ async def approve_negotiation(
     return negotiation
 
 
-@router.patch("/{negotiation_id}/reject", response_model=NegotiationResponse)
+@router.patch("/{negotiation_id}/reject/", response_model=NegotiationResponse)
 async def reject_negotiation(
     negotiation_id: int,
     approval: NegotiationApproval,

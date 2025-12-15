@@ -8,7 +8,7 @@ from ...utils.calculator import calculate_prepayment_impact
 router = APIRouter()
 
 
-@router.post("/prepayment", response_model=PrepaymentResult)
+@router.post("/prepayment/", response_model=PrepaymentResult)
 async def calculate_prepayment(calculation: PrepaymentCalculation):
     """Calculate prepayment impact"""
     new_emi, new_tenure, interest_saved, schedule_before, schedule_after = calculate_prepayment_impact(

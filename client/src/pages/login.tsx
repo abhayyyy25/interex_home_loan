@@ -4,31 +4,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { IndianRupee, Loader2 } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loginAttempted, setLoginAttempted] = useState(false);
+  const hasNavigated = useRef(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    try {
-      await login(email, password);
+  // Watch for successful authentication and navigate
+  useEffect(() => {
+    if (loginAttempted && isAuthenticated && user && !hasNavigated.current) {
+      hasNavigated.current = true;
       toast({
         title: "Login Successful",
         description: "Welcome back to Interex!",
       });
-      
-      // Navigate immediately - AuthContext handles state synchronization
       setLocation("/dashboard");
+    }
+  }, [loginAttempted, isAuthenticated, user, setLocation, toast]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    hasNavigated.current = false;
+    
+    try {
+      await login(email, password);
+      // Mark that login was attempted - useEffect will handle navigation
+      setLoginAttempted(true);
     } catch (error: any) {
       toast({
         title: "Login Failed",
@@ -36,6 +46,7 @@ export default function Login() {
         variant: "destructive",
       });
       setIsLoading(false);
+      setLoginAttempted(false);
     }
   };
 

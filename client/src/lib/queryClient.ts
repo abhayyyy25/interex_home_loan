@@ -6,7 +6,15 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 // CRITICAL: Ensure all API URLs have trailing slashes to prevent 307 redirects
 // 307 redirects drop cookies/headers, causing auth failures on Render
 function ensureTrailingSlash(url: string): string {
-  if (url.includes('?') || url.endsWith('/')) return url;
+  // Handle URLs with query strings - add trailing slash before the ?
+  if (url.includes('?')) {
+    const [path, query] = url.split('?');
+    if (!path.endsWith('/')) {
+      return `${path}/?${query}`;
+    }
+    return url;
+  }
+  if (url.endsWith('/')) return url;
   return `${url}/`;
 }
 
