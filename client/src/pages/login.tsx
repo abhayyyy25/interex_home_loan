@@ -18,15 +18,22 @@ export default function Login() {
   const [loginAttempted, setLoginAttempted] = useState(false);
   const hasNavigated = useRef(false);
 
-  // Watch for successful authentication and navigate
+  // Watch for successful authentication and navigate based on role
   useEffect(() => {
     if (loginAttempted && isAuthenticated && user && !hasNavigated.current) {
       hasNavigated.current = true;
+      
+      // Redirect admin users to Admin Control Center, regular users to Dashboard
+      const isAdmin = user.role === "admin";
+      const redirectPath = isAdmin ? "/admin" : "/dashboard";
+      
       toast({
         title: "Login Successful",
-        description: "Welcome back to Interex!",
+        description: isAdmin 
+          ? "Welcome to Admin Control Center!" 
+          : "Welcome back to Interex!",
       });
-      setLocation("/dashboard");
+      setLocation(redirectPath);
     }
   }, [loginAttempted, isAuthenticated, user, setLocation, toast]);
 
