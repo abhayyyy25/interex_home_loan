@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { AdminLayout } from "@/components/admin-layout";
 import { CheckCircle2, XCircle, Clock, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -119,13 +120,14 @@ export default function AdminNegotiations() {
   const rejectedCount = negotiations?.filter(n => n.status === "rejected").length || 0;
 
   return (
-    <div className="container max-w-7xl mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Negotiation Management</h1>
-        <p className="text-muted-foreground">
-          Review and approve customer negotiation letters
-        </p>
-      </div>
+    <AdminLayout>
+      <div className="p-6 space-y-6 max-w-7xl mx-auto">
+        <div>
+          <h1 className="text-3xl font-bold">Negotiation Management</h1>
+          <p className="text-muted-foreground">
+            Review and approve customer negotiation letters
+          </p>
+        </div>
 
       <div className="grid grid-cols-3 gap-4">
         <Card>
@@ -316,6 +318,7 @@ export default function AdminNegotiations() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

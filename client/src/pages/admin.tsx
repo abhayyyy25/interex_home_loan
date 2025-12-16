@@ -10,6 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AdminLayout } from "@/components/admin-layout";
 import {
   AlertCircle,
   ArrowRight,
@@ -119,8 +120,8 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
-      <div className="container mx-auto p-6 space-y-6 max-w-7xl">
+    <AdminLayout>
+      <div className="p-6 space-y-6 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -131,7 +132,7 @@ export default function AdminDashboard() {
               Monitor users, negotiations, and platform performance.
             </p>
           </div>
-          <Badge variant="outline" className="gap-1">
+          <Badge variant="outline" className="gap-1 hidden lg:flex">
             <ShieldCheck className="w-4 h-4" />
             Admin Panel
           </Badge>
@@ -437,6 +438,6 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

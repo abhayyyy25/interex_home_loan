@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { AdminLayout } from "@/components/admin-layout";
 import {
   ArrowLeft,
   Bell,
@@ -133,15 +134,10 @@ export default function AdminNotificationsSend() {
   const selectedTypeInfo = notificationTypes.find((t) => t.value === notificationType);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container max-w-4xl mx-auto p-6 space-y-6">
+    <AdminLayout>
+      <div className="p-6 space-y-6 max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Link href="/admin">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
           <div>
             <h1 className="text-3xl font-bold font-jakarta flex items-center gap-3">
               <Bell className="w-8 h-8 text-primary" />
@@ -399,7 +395,7 @@ export default function AdminNotificationsSend() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </AdminLayout>
   );
 }
 

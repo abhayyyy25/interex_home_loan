@@ -58,6 +58,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/contexts/AuthContext";
+import { AdminLayout } from "@/components/admin-layout";
 
 interface ReportData {
   id: number;
@@ -512,7 +513,8 @@ function AdminReportsView({
   ].filter((d) => d.value > 0);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8" data-testid="page-admin-reports">
+    <AdminLayout>
+      <div className="p-6 max-w-7xl mx-auto space-y-8" data-testid="page-admin-reports">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -812,7 +814,8 @@ function AdminReportsView({
           </CardContent>
         </Card>
       )}
-    </div>
+      </div>
+    </AdminLayout>
   );
 }
 
