@@ -449,10 +449,11 @@ async def send_admin_notification(
         if not user_exists.scalar_one_or_none():
             logger.warning(f"Skipping notification for non-existent user_id: {user.id}")
             continue
-            
+        
+        # Use the enum member directly - SQLAlchemy handles conversion
         notification = Notification(
             user_id=str(user.id),  # Ensure user_id is a string
-            type=notification_type,
+            type=notification_type,  # Pass the enum member
             title=payload.title,
             message=payload.message,
             is_read=False,  # Explicitly set default
@@ -464,6 +465,7 @@ async def send_admin_notification(
         )
         db.add(notification)
         notifications_created += 1
+        logger.info(f"Created notification for user {user.id} with type {notification_type.value}")
     
     # Wrap commit in try-except for better error diagnosis
     try:
