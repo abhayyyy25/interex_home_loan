@@ -360,6 +360,10 @@ async def force_password_reset(
 from pydantic import BaseModel
 from typing import Optional as Opt
 from ...models import Notification, NotificationType
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AdminNotificationPayload(BaseModel):
     title: str
@@ -430,15 +434,30 @@ async def send_admin_notification(
             detail="receiver_type must be 'all' or 'selected'"
         )
     
+    if not target_users:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No users found to send notifications to"
+        )
+    
     # Create notifications for all target users
     for user in target_users:
+        # Verify user exists before creating notification (FK check)
+        user_exists = await db.execute(
+            select(User.id).where(User.id == user.id)
+        )
+        if not user_exists.scalar_one_or_none():
+            logger.warning(f"Skipping notification for non-existent user_id: {user.id}")
+            continue
+            
         notification = Notification(
-            user_id=user.id,
+            user_id=str(user.id),  # Ensure user_id is a string
             type=notification_type,
             title=payload.title,
             message=payload.message,
+            is_read=False,  # Explicitly set default
             meta_data={
-                "sent_by_admin": current_user.id,
+                "sent_by_admin": str(current_user.id),
                 "admin_email": current_user.email,
                 "broadcast": payload.receiver_type == "all"
             }
@@ -446,7 +465,31 @@ async def send_admin_notification(
         db.add(notification)
         notifications_created += 1
     
-    await db.commit()
+    # Wrap commit in try-except for better error diagnosis
+    try:
+        await db.commit()
+    except IntegrityError as e:
+        await db.rollback()
+        logger.error(f"IntegrityError while sending notifications: {str(e)}")
+        logger.error(f"Original error: {e.orig}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Database integrity error: {str(e.orig)}"
+        )
+    except SQLAlchemyError as e:
+        await db.rollback()
+        logger.error(f"SQLAlchemyError while sending notifications: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
+        )
+    except Exception as e:
+        await db.rollback()
+        logger.error(f"Unexpected error while sending notifications: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Unexpected error: {str(e)}"
+        )
     
     return {
         "message": f"Successfully sent {notifications_created} notification(s)",
