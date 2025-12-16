@@ -352,3 +352,105 @@ async def force_password_reset(
     await db.refresh(user)
     
     return {"message": f"Password for {email} has been reset (Correctly updated 'password_hash')."}
+
+
+# ===============================================
+# ADMIN NOTIFICATION SEND ENDPOINT
+# ===============================================
+from pydantic import BaseModel
+from typing import Optional as Opt
+from ...models import Notification, NotificationType
+
+class AdminNotificationPayload(BaseModel):
+    title: str
+    message: str
+    notification_type: str  # SYSTEM, LOAN, NEGOTIATION, PROMOTION
+    receiver_type: str  # "all" or "selected"
+    selected_user_id: Opt[str] = None
+    selected_user_email: Opt[str] = None
+
+
+@router.post("/notifications/send/", status_code=status.HTTP_201_CREATED)
+async def send_admin_notification(
+    payload: AdminNotificationPayload,
+    current_user: User = Depends(require_admin),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Admin endpoint to send notifications to all users or a specific user.
+    """
+    # Map notification type string to enum
+    type_mapping = {
+        "SYSTEM": NotificationType.SYSTEM,
+        "LOAN": NotificationType.LOAN,
+        "NEGOTIATION": NotificationType.NEGOTIATION,
+        "PROMOTION": NotificationType.PROMOTION,
+    }
+    
+    notification_type = type_mapping.get(payload.notification_type.upper())
+    if not notification_type:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid notification type. Must be one of: {list(type_mapping.keys())}"
+        )
+    
+    notifications_created = 0
+    target_users = []
+    
+    if payload.receiver_type == "all":
+        # Get all users
+        result = await db.execute(select(User))
+        target_users = result.scalars().all()
+    elif payload.receiver_type == "selected":
+        # Find specific user by ID or email
+        if payload.selected_user_id:
+            result = await db.execute(
+                select(User).where(User.id == payload.selected_user_id)
+            )
+        elif payload.selected_user_email:
+            result = await db.execute(
+                select(User).where(User.email == payload.selected_user_email)
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Must provide selected_user_id or selected_user_email for selected receiver type"
+            )
+        
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Selected user not found"
+            )
+        target_users = [user]
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="receiver_type must be 'all' or 'selected'"
+        )
+    
+    # Create notifications for all target users
+    for user in target_users:
+        notification = Notification(
+            user_id=user.id,
+            type=notification_type,
+            title=payload.title,
+            message=payload.message,
+            meta_data={
+                "sent_by_admin": current_user.id,
+                "admin_email": current_user.email,
+                "broadcast": payload.receiver_type == "all"
+            }
+        )
+        db.add(notification)
+        notifications_created += 1
+    
+    await db.commit()
+    
+    return {
+        "message": f"Successfully sent {notifications_created} notification(s)",
+        "notifications_created": notifications_created,
+        "receiver_type": payload.receiver_type,
+        "notification_type": payload.notification_type
+    }

@@ -21,6 +21,7 @@ import Negotiations from "@/pages/negotiations";
 import NegotiationsNew from "@/pages/negotiations-new";
 import NegotiationDetail from "@/pages/negotiation-detail";
 import AdminNegotiations from "@/pages/admin-negotiations";
+import AdminNotificationsSend from "@/pages/admin-notifications-send";
 import { Loader2 } from "lucide-react";
 
 function ProtectedRoute({
@@ -124,6 +125,9 @@ function Router() {
       </Route>
       <Route path="/admin/negotiations">
         <AdminRoute component={AdminNegotiations} />
+      </Route>
+      <Route path="/admin/notifications/send">
+        <AdminRoute component={AdminNotificationsSend} />
       </Route>
 
       {/* 404 */}

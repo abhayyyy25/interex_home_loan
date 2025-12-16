@@ -39,6 +39,10 @@ class NotificationType(str, enum.Enum):
     MILESTONE = "milestone"
     NEGOTIATION_UPDATE = "negotiation_update"
     EMI_REMINDER = "emi_reminder"
+    SYSTEM = "system"
+    LOAN = "loan"
+    NEGOTIATION = "negotiation"
+    PROMOTION = "promotion"
 
 
 class User(Base):

@@ -3,6 +3,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { Link } from "wouter";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -13,15 +14,18 @@ import {
   AlertCircle,
   ArrowRight,
   BarChart3,
+  Bell,
   Building2,
   CheckCircle2,
   Clock,
+  FileText,
+  Send,
   ShieldCheck,
   Users,
 } from "lucide-react";
 
 // -------------------------
-// 1. Updated Types to match admin.py JSON response
+// Types
 // -------------------------
 
 interface AdminStats {
@@ -29,6 +33,8 @@ interface AdminStats {
   premium_users: number;
   pending_negotiations: number;
   total_savings_generated: number;
+  total_loans: number;
+  banks: number;
 }
 
 type NegotiationStatus = "pending" | "approved" | "rejected";
@@ -45,14 +51,13 @@ interface AdminNegotiation {
   admin_notes?: string | null;
 }
 
-// Updated to match the JSON keys from admin.py -> get_all_users()
 interface AdminUser {
   id: string;
   name: string;
   email: string;
-  tier: string;       // API sends "tier", not "subscription_tier"
-  loan_count: number; // API sends "loan_count", not "total_loans"
-  joined: string;     // API sends "joined", not "created_at"
+  tier: string;
+  loan_count: number;
+  joined: string;
   role: string;
 }
 
@@ -97,7 +102,7 @@ export default function AdminDashboard() {
     },
   });
 
-  // 3️⃣ NEW: Real Users Data
+  // 3️⃣ Users Data
   const {
     data: users = [],
     isLoading: usersLoading,
@@ -123,7 +128,7 @@ export default function AdminDashboard() {
               Admin Control Center
             </h1>
             <p className="text-muted-foreground">
-              Monitor users, negotiation requests, and platform performance.
+              Monitor users, negotiations, and platform performance.
             </p>
           </div>
           <Badge variant="outline" className="gap-1">
@@ -132,7 +137,73 @@ export default function AdminDashboard() {
           </Badge>
         </div>
 
-        {/* Top KPI cards */}
+        {/* Quick Actions */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {/* Admin Notifications Tile */}
+          <Link href="/admin/notifications/send">
+            <Card className="cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all group">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 group-hover:scale-110 transition-transform">
+                    <Send className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">Admin Notifications</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Send announcements to users
+                    </p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          {/* Negotiation Management Tile */}
+          <Link href="/admin/negotiations">
+            <Card className="cursor-pointer hover:shadow-lg hover:border-orange-500/50 transition-all group">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-500/5 group-hover:scale-110 transition-transform">
+                    <FileText className="w-6 h-6 text-orange-500" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">Manage Negotiations</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Review and approve requests
+                    </p>
+                  </div>
+                  {pendingNegotiations.length > 0 && (
+                    <Badge variant="destructive">{pendingNegotiations.length}</Badge>
+                  )}
+                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-orange-500 group-hover:translate-x-1 transition-all" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          {/* Reports & Analytics Tile */}
+          <Link href="/reports">
+            <Card className="cursor-pointer hover:shadow-lg hover:border-green-500/50 transition-all group">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-green-500/20 to-green-500/5 group-hover:scale-110 transition-transform">
+                    <BarChart3 className="w-6 h-6 text-green-500" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg">Reports & Analytics</h3>
+                    <p className="text-sm text-muted-foreground">
+                      View platform analytics
+                    </p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-green-500 group-hover:translate-x-1 transition-all" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+
+        {/* Stats KPI cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -162,7 +233,7 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-primary" />
+                <Clock className="w-4 h-4 text-orange-500" />
                 Pending Negotiations
               </CardTitle>
             </CardHeader>
@@ -177,7 +248,7 @@ export default function AdminDashboard() {
                     {stats.pending_negotiations}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {pendingNegotiations.length} currently in queue
+                    Awaiting review
                   </p>
                 </>
               )}
@@ -187,7 +258,7 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-primary" />
+                <CheckCircle2 className="w-4 h-4 text-green-500" />
                 Savings Generated
               </CardTitle>
             </CardHeader>
@@ -202,7 +273,7 @@ export default function AdminDashboard() {
                     {formatCurrency(stats.total_savings_generated)}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Total interest savings from approved negotiations
+                    From approved negotiations
                   </p>
                 </>
               )}
@@ -212,26 +283,22 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-primary" />
-                Banks Covered
+                <Building2 className="w-4 h-4 text-blue-500" />
+                Total Loans
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {negotiationsLoading ? (
+              {statsLoading ? (
                 <Skeleton className="h-8 w-20" />
-              ) : negotiationsError ? (
+              ) : statsError || !stats ? (
                 <span className="text-xs text-muted-foreground">—</span>
               ) : (
                 <>
                   <div className="text-2xl font-bold">
-                    {
-                      new Set(
-                        negotiations.map((n) => n.bank_name || "Unknown Bank")
-                      ).size
-                    }
+                    {stats.total_loans}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Unique banks in active negotiations
+                    Across {stats.banks} banks
                   </p>
                 </>
               )}
@@ -252,17 +319,12 @@ export default function AdminDashboard() {
               <h2 className="text-xl font-semibold font-jakarta">
                 Pending Negotiations
               </h2>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1"
-                onClick={() => {
-                   // Add navigation logic here if needed
-                }}
-              >
-                View all
-                <ArrowRight className="w-4 h-4" />
-              </Button>
+              <Link href="/admin/negotiations">
+                <Button variant="outline" size="sm" className="gap-1">
+                  View all
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
             </div>
 
             <Card>
@@ -318,7 +380,7 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
 
-          {/* Users tab - CONNECTED TO REAL DATA */}
+          {/* Users tab */}
           <TabsContent value="users" className="space-y-4">
             <h2 className="text-xl font-semibold font-jakarta">
               User Overview
@@ -326,49 +388,49 @@ export default function AdminDashboard() {
             <Card>
               <CardContent className="p-0">
                 {usersLoading ? (
-                   <div className="p-4 space-y-3">
-                      <Skeleton className="h-8 w-full" />
-                      <Skeleton className="h-8 w-full" />
-                      <Skeleton className="h-8 w-full" />
-                   </div>
+                  <div className="p-4 space-y-3">
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                    <Skeleton className="h-8 w-full" />
+                  </div>
                 ) : (
-                <div className="min-w-full overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/60">
-                      <tr className="[&>th]:px-4 [&>th]:py-3 [&>th]:text-left [&>th]:font-medium [&>th]:text-muted-foreground">
-                        <th>User</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Tier</th>
-                        <th>Loans</th>
-                        <th>Joined</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map((u) => (
-                        <tr
-                          key={u.id}
-                          className="[&>td]:px-4 [&>td]:py-3 border-t hover:bg-muted/50 transition-colors"
-                        >
-                          <td className="font-medium">{u.name}</td>
-                          <td className="text-muted-foreground">{u.email}</td>
-                          <td>
-                             <Badge variant={u.role === "admin" ? "default" : "secondary"}>
-                               {u.role}
-                             </Badge>
-                          </td>
-                          <td>
-                            <Badge variant="outline">{u.tier}</Badge>
-                          </td>
-                          <td>{u.loan_count}</td>
-                          <td className="text-muted-foreground text-xs">
-                            {new Date(u.joined).toLocaleDateString()}
-                          </td>
+                  <div className="min-w-full overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/60">
+                        <tr className="[&>th]:px-4 [&>th]:py-3 [&>th]:text-left [&>th]:font-medium [&>th]:text-muted-foreground">
+                          <th>User</th>
+                          <th>Email</th>
+                          <th>Role</th>
+                          <th>Tier</th>
+                          <th>Loans</th>
+                          <th>Joined</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {users.map((u) => (
+                          <tr
+                            key={u.id}
+                            className="[&>td]:px-4 [&>td]:py-3 border-t hover:bg-muted/50 transition-colors"
+                          >
+                            <td className="font-medium">{u.name}</td>
+                            <td className="text-muted-foreground">{u.email}</td>
+                            <td>
+                              <Badge variant={u.role === "admin" ? "default" : "secondary"}>
+                                {u.role}
+                              </Badge>
+                            </td>
+                            <td>
+                              <Badge variant="outline">{u.tier}</Badge>
+                            </td>
+                            <td>{u.loan_count}</td>
+                            <td className="text-muted-foreground text-xs">
+                              {new Date(u.joined).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </CardContent>
             </Card>
