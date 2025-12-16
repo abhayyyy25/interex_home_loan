@@ -145,7 +145,16 @@ class Notification(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     
-    type = Column(Enum(NotificationType), nullable=False)
+    # Use values_callable to store enum values (lowercase) instead of names (uppercase)
+    type = Column(
+        Enum(
+            NotificationType,
+            values_callable=lambda obj: [e.value for e in obj],
+            name="notificationtype",
+            create_type=False  # Don't try to create the type, it already exists
+        ),
+        nullable=False
+    )
     title = Column(String, nullable=False)
     message = Column(Text, nullable=False)
     is_read = Column(Boolean, default=False, nullable=False)
