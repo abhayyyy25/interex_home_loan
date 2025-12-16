@@ -59,6 +59,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/contexts/AuthContext";
 import { AdminLayout } from "@/components/admin-layout";
+import { exportAdminReportPDF, exportUserReportPDF } from "@/lib/pdf-export";
 
 interface ReportData {
   id: number;
@@ -298,12 +299,81 @@ export default function Reports() {
     return p;
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     toast({
-      title: "Exporting PDF",
-      description: "Your report is being prepared for download...",
+      title: "Generating PDF",
+      description: "Please wait while we create your report...",
     });
-    // PDF export logic here
+
+    try {
+      if (isAdmin && adminReport) {
+        // Prepare admin report data
+        await exportAdminReportPDF({
+          title: "Platform Analytics Report",
+          subtitle: "Aggregated platform metrics and performance insights",
+          generatedAt: new Date(),
+          isAdmin: true,
+          kpis: {
+            totalAUM: formatLakhs(adminReport.kpis.total_aum),
+            interestSaved: formatLakhs(adminReport.kpis.total_interest_saved),
+            avgRate: `${adminReport.kpis.avg_loan_rate.toFixed(2)}%`,
+            activeLoans: adminReport.kpis.active_loans,
+            usersWithLoans: adminReport.kpis.users_with_loans,
+          },
+          bankDistribution: adminReport.bank_distribution.map((bank) => ({
+            name: bank.bank_name,
+            value: formatLakhs(bank.total_outstanding),
+            percentage: `${((bank.total_outstanding / adminReport.kpis.total_aum) * 100).toFixed(1)}%`,
+          })),
+          negotiationStats: {
+            total: adminReport.negotiation_performance.total_processed,
+            approved: adminReport.negotiation_performance.approved,
+            rejected: adminReport.negotiation_performance.rejected,
+            pending: adminReport.negotiation_performance.pending,
+            successRate: `${adminReport.negotiation_performance.success_rate}%`,
+            avgReduction: `${adminReport.negotiation_performance.avg_rate_reduction.toFixed(2)}%`,
+          },
+        }, "admin-charts-container");
+
+        toast({
+          title: "PDF Downloaded!",
+          description: "Your admin report has been saved.",
+        });
+      } else if (report && summary) {
+        // Prepare user report data
+        await exportUserReportPDF({
+          title: "Savings Report",
+          subtitle: "Track your home loan savings journey",
+          generatedAt: new Date(),
+          isAdmin: false,
+          lifetimeSavings: {
+            interestSaved: formatCurrency(summary.lifetime.total_interest_saved),
+            totalPrepayments: formatCurrency(summary.lifetime.total_prepayments),
+            monthsSaved: summary.lifetime.total_tenure_reduced_months,
+            completion: `${summary.portfolio.completion_percentage.toFixed(1)}%`,
+          },
+          periodData: {
+            period: formatPeriod(period),
+            prepayments: formatCurrency(report.total_prepayments),
+            interestSaved: formatCurrency(report.total_interest_saved),
+            tenureReduced: report.total_tenure_reduced_months,
+          },
+          aiSummary: report.ai_narrative,
+        }, "user-charts-container");
+
+        toast({
+          title: "PDF Downloaded!",
+          description: "Your savings report has been saved.",
+        });
+      }
+    } catch (error) {
+      console.error("PDF export error:", error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error generating your PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleShare = async () => {
@@ -604,7 +674,7 @@ function AdminReportsView({
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div id="admin-charts-container" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Bank Distribution Chart */}
         <Card>
           <CardHeader>
@@ -945,7 +1015,7 @@ function UserReportContent({
       )}
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div id="user-charts-container" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {portfolioChartData.length > 0 && (
           <Card>
             <CardHeader>
