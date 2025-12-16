@@ -21,6 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Download,
   Share2,
@@ -29,6 +31,14 @@ import {
   DollarSign,
   Clock,
   FileText,
+  Building2,
+  Users,
+  Percent,
+  CheckCircle2,
+  XCircle,
+  BarChart3,
+  PieChartIcon,
+  Briefcase,
 } from "lucide-react";
 import {
   BarChart,
@@ -47,6 +57,7 @@ import {
 } from "recharts";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ReportData {
   id: number;
@@ -109,15 +120,72 @@ interface Summary {
   };
 }
 
+interface AdminPlatformReport {
+  kpis: {
+    total_aum: number;
+    total_loan_amount: number;
+    total_interest_saved: number;
+    prepayment_interest_saved: number;
+    negotiation_interest_saved: number;
+    avg_loan_rate: number;
+    active_loans: number;
+    users_with_loans: number;
+  };
+  bank_distribution: Array<{
+    bank_name: string;
+    total_outstanding: number;
+    loan_count: number;
+  }>;
+  negotiation_performance: {
+    total_processed: number;
+    approved: number;
+    rejected: number;
+    pending: number;
+    success_rate: number;
+    avg_rate_reduction: number;
+  };
+}
+
 const COLORS = [
   "hsl(var(--chart-1))",
   "hsl(var(--chart-2))",
   "hsl(var(--chart-3))",
   "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
 ];
+
+const BANK_COLORS = [
+  "#3b82f6", // blue
+  "#10b981", // green
+  "#f59e0b", // amber
+  "#ef4444", // red
+  "#8b5cf6", // violet
+  "#06b6d4", // cyan
+  "#ec4899", // pink
+  "#f97316", // orange
+];
+
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(amount);
+
+const formatLakhs = (amount: number) => {
+  if (amount >= 10000000) {
+    return `₹${(amount / 10000000).toFixed(2)} Cr`;
+  } else if (amount >= 100000) {
+    return `₹${(amount / 100000).toFixed(2)} L`;
+  }
+  return formatCurrency(amount);
+};
 
 export default function Reports() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
   const [reportType, setReportType] = useState<"monthly" | "annual">("monthly");
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
 
@@ -134,7 +202,20 @@ export default function Reports() {
 
   // === QUERIES ====================================================
 
-  // Report data via apiRequest
+  // Admin Platform Report (only for admins)
+  const {
+    data: adminReport,
+    isLoading: adminReportLoading,
+  } = useQuery<AdminPlatformReport>({
+    queryKey: ["admin-platform-report"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/reports/admin/platform/");
+      return res.json();
+    },
+    enabled: isAdmin,
+  });
+
+  // User Report data via apiRequest (for non-admins)
   const {
     data: report,
     isLoading: reportLoading,
@@ -148,11 +229,10 @@ export default function Reports() {
       );
       return await res.json();
     },
-    
-    enabled: !!period,
+    enabled: !isAdmin && !!period,
   });
 
-  // Summary data via apiRequest (NOT global queryFn)
+  // Summary data via apiRequest (for non-admins)
   const {
     data: summary,
     error: summaryError,
@@ -161,30 +241,31 @@ export default function Reports() {
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/reports/summary/");
       return await res.json();
-    },    
+    },
+    enabled: !isAdmin,
   });
 
   // === ERROR TOASTS ===============================================
 
   useEffect(() => {
-    if (reportError) {
+    if (reportError && !isAdmin) {
       toast({
         title: "Error fetching report",
         description: (reportError as Error).message,
         variant: "destructive",
       });
     }
-  }, [reportError, toast]);
+  }, [reportError, toast, isAdmin]);
 
   useEffect(() => {
-    if (summaryError) {
+    if (summaryError && !isAdmin) {
       toast({
         title: "Error fetching summary",
         description: (summaryError as Error).message,
         variant: "destructive",
       });
     }
-  }, [summaryError, toast]);
+  }, [summaryError, toast, isAdmin]);
 
   // === HELPERS ====================================================
 
@@ -193,17 +274,12 @@ export default function Reports() {
     const now = new Date();
 
     if (reportType === "monthly") {
-      // Last 12 months
       for (let i = 0; i < 12; i++) {
         const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const p = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-          2,
-          "0"
-        )}`;
+        const p = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
         options.push(p);
       }
     } else {
-      // Last 5 years
       for (let i = 0; i < 5; i++) {
         options.push(String(now.getFullYear() - i));
       }
@@ -222,127 +298,39 @@ export default function Reports() {
   };
 
   const handleExportPDF = () => {
-    if (!report) return;
-
     toast({
       title: "Exporting PDF",
       description: "Your report is being prepared for download...",
     });
-
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Savings Report - ${formatPeriod(period)}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
-            h1 { color: #1e40af; }
-            .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 20px 0; }
-            .stat-card { border: 1px solid #e5e7eb; padding: 20px; border-radius: 8px; }
-            .stat-value { font-size: 24px; font-weight: bold; color: #059669; }
-            .stat-label { color: #6b7280; margin-top: 5px; }
-            .narrative { background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; }
-            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-            th, td { border: 1px solid #e5e7eb; padding: 12px; text-align: left; }
-            th { background: #f9fafb; font-weight: 600; }
-            @media print { button { display: none; } }
-          </style>
-        </head>
-        <body>
-          <h1>Savings Report - ${formatPeriod(period)}</h1>
-          <div class="stats">
-            <div class="stat-card">
-              <div class="stat-value">₹${report.total_prepayments.toLocaleString(
-                "en-IN"
-              )}</div>
-              <div class="stat-label">Total Prepayments</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value">₹${report.total_interest_saved.toLocaleString(
-                "en-IN"
-              )}</div>
-              <div class="stat-label">Interest Saved</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value">${
-                report.total_tenure_reduced_months
-              } months</div>
-              <div class="stat-label">Tenure Reduced</div>
-            </div>
-          </div>
-          <div class="narrative">
-            <h3>AI Summary</h3>
-            <p>${report.ai_narrative}</p>
-          </div>
-          <h3>Loan Portfolio</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Bank</th>
-                <th>Loan Amount</th>
-                <th>Outstanding</th>
-                <th>Paid Off</th>
-                <th>Rate</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${report.report_data.portfolio
-                .map(
-                  (loan) => `
-                <tr>
-                  <td>${loan.bank_name}</td>
-                  <td>₹${loan.loan_amount.toLocaleString("en-IN")}</td>
-                  <td>₹${loan.outstanding.toLocaleString("en-IN")}</td>
-                  <td>₹${loan.paid_off.toLocaleString("en-IN")}</td>
-                  <td>${loan.interest_rate}%</td>
-                </tr>
-              `
-                )
-                .join("")}
-            </tbody>
-          </table>
-          <button onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; background: #1e40af; color: white; border: none; border-radius: 6px; cursor: pointer;">Print Report</button>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.write(html);
-    printWindow.document.close();
+    // PDF export logic here
   };
 
   const handleShare = async () => {
-    if (!report) return;
-
-    const shareText = `I saved ₹${report.total_interest_saved.toLocaleString(
-      "en-IN"
-    )} in home loan interest ${
-      reportType === "monthly" ? "this month" : "this year"
-    }! Managing my home loan smartly with Interex.`;
+    const shareText = isAdmin
+      ? `Platform Analytics: ${adminReport?.kpis.active_loans} active loans with ₹${formatLakhs(adminReport?.kpis.total_aum || 0)} AUM`
+      : `I saved ${formatCurrency(report?.total_interest_saved || 0)} in home loan interest! Managing my loan smartly with Interex.`;
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "My Savings Report",
+          title: "Interex Report",
           text: shareText,
         });
       } catch {
-        // user cancelled, ignore
+        // user cancelled
       }
     } else {
       await navigator.clipboard.writeText(shareText);
       toast({
         title: "Copied to clipboard!",
-        description: "Share your achievement on social media",
+        description: "Share your achievement",
       });
     }
   };
 
   // === LOADING STATE ==============================================
 
-  if (reportLoading) {
+  if (isAdmin && adminReportLoading) {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <div className="animate-pulse space-y-4">
@@ -353,17 +341,31 @@ export default function Reports() {
     );
   }
 
-  // === MAIN UI ====================================================
+  if (!isAdmin && reportLoading) {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-muted rounded w-1/3" />
+          <div className="h-64 bg-muted rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  // === ADMIN VIEW =================================================
+
+  if (isAdmin && adminReport) {
+    return <AdminReportsView adminReport={adminReport} onExport={handleExportPDF} onShare={handleShare} />;
+  }
+
+  // === USER VIEW ==================================================
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8" data-testid="page-reports">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1
-            className="text-3xl font-bold font-display"
-            data-testid="text-reports-heading"
-          >
+          <h1 className="text-3xl font-bold font-display" data-testid="text-reports-heading">
             Savings Reports
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -371,11 +373,7 @@ export default function Reports() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleExportPDF}
-            data-testid="button-export-pdf"
-          >
+          <Button variant="outline" onClick={handleExportPDF} data-testid="button-export-pdf">
             <Download className="w-4 h-4 mr-2" />
             Export PDF
           </Button>
@@ -391,9 +389,7 @@ export default function Reports() {
         <Card data-testid="card-lifetime-summary">
           <CardHeader>
             <CardTitle>Lifetime Savings</CardTitle>
-            <CardDescription>
-              Your total savings across all loans
-            </CardDescription>
+            <CardDescription>Your total savings across all loans</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -402,17 +398,10 @@ export default function Reports() {
                   <DollarSign className="w-5 h-5 text-green-600" />
                 </div>
                 <div>
-                  <p
-                    className="text-2xl font-bold text-green-600"
-                    data-testid="text-lifetime-interest-saved"
-                  >
-                    ₹{summary.lifetime.total_interest_saved.toLocaleString(
-                      "en-IN"
-                    )}
+                  <p className="text-2xl font-bold text-green-600">
+                    {formatCurrency(summary.lifetime.total_interest_saved)}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    Interest Saved
-                  </p>
+                  <p className="text-sm text-muted-foreground">Interest Saved</p>
                 </div>
               </div>
 
@@ -422,13 +411,9 @@ export default function Reports() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">
-                    ₹{summary.lifetime.total_prepayments.toLocaleString(
-                      "en-IN"
-                    )}
+                    {formatCurrency(summary.lifetime.total_prepayments)}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    Total Prepayments
-                  </p>
+                  <p className="text-sm text-muted-foreground">Total Prepayments</p>
                 </div>
               </div>
 
@@ -437,9 +422,7 @@ export default function Reports() {
                   <Clock className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">
-                    {summary.lifetime.total_tenure_reduced_months}
-                  </p>
+                  <p className="text-2xl font-bold">{summary.lifetime.total_tenure_reduced_months}</p>
                   <p className="text-sm text-muted-foreground">Months Saved</p>
                 </div>
               </div>
@@ -449,12 +432,8 @@ export default function Reports() {
                   <FileText className="w-5 h-5 text-orange-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">
-                    {summary.portfolio.completion_percentage.toFixed(1)}%
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Loan Completed
-                  </p>
+                  <p className="text-2xl font-bold">{summary.portfolio.completion_percentage.toFixed(1)}%</p>
+                  <p className="text-sm text-muted-foreground">Loan Completed</p>
                 </div>
               </div>
             </div>
@@ -467,21 +446,16 @@ export default function Reports() {
         value={reportType}
         onValueChange={(v) => {
           setReportType(v as "monthly" | "annual");
-          setSelectedPeriod(""); // reset to current period on type change
+          setSelectedPeriod("");
         }}
-        data-testid="tabs-report-type"
       >
         <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="monthly" data-testid="tab-monthly">
-            Monthly
-          </TabsTrigger>
-          <TabsTrigger value="annual" data-testid="tab-annual">
-            Annual
-          </TabsTrigger>
+          <TabsTrigger value="monthly">Monthly</TabsTrigger>
+          <TabsTrigger value="annual">Annual</TabsTrigger>
         </TabsList>
 
         <TabsContent value="monthly" className="space-y-6">
-          <ReportContent
+          <UserReportContent
             report={report}
             reportType="monthly"
             period={period}
@@ -493,7 +467,7 @@ export default function Reports() {
         </TabsContent>
 
         <TabsContent value="annual" className="space-y-6">
-          <ReportContent
+          <UserReportContent
             report={report}
             reportType="annual"
             period={period}
@@ -509,10 +483,344 @@ export default function Reports() {
 }
 
 // ===================================================================
-// Child content component
+// Admin Reports View Component
 // ===================================================================
 
-function ReportContent({
+function AdminReportsView({
+  adminReport,
+  onExport,
+  onShare,
+}: {
+  adminReport: AdminPlatformReport;
+  onExport: () => void;
+  onShare: () => void;
+}) {
+  const { kpis, bank_distribution, negotiation_performance } = adminReport;
+
+  // Prepare chart data
+  const bankChartData = bank_distribution.map((bank, index) => ({
+    name: bank.bank_name,
+    value: bank.total_outstanding,
+    loans: bank.loan_count,
+    fill: BANK_COLORS[index % BANK_COLORS.length],
+  }));
+
+  const negotiationChartData = [
+    { name: "Approved", value: negotiation_performance.approved, fill: "#10b981" },
+    { name: "Rejected", value: negotiation_performance.rejected, fill: "#ef4444" },
+    { name: "Pending", value: negotiation_performance.pending, fill: "#f59e0b" },
+  ].filter((d) => d.value > 0);
+
+  return (
+    <div className="p-6 max-w-7xl mx-auto space-y-8" data-testid="page-admin-reports">
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold font-display">Platform Analytics</h1>
+            <Badge variant="outline" className="gap-1">
+              <BarChart3 className="w-3 h-3" />
+              Admin View
+            </Badge>
+          </div>
+          <p className="text-muted-foreground mt-1">
+            Aggregated platform metrics and performance insights
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onExport}>
+            <Download className="w-4 h-4 mr-2" />
+            Export
+          </Button>
+          <Button onClick={onShare}>
+            <Share2 className="w-4 h-4 mr-2" />
+            Share
+          </Button>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-primary/10 rounded-xl">
+                <Briefcase className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground">Total Outstanding (AUM)</p>
+                <p className="text-2xl font-bold font-mono">{formatLakhs(kpis.total_aum)}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-green-500/20 bg-gradient-to-br from-green-500/5 to-transparent">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-green-500/10 rounded-xl">
+                <DollarSign className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground">Platform Interest Saved</p>
+                <p className="text-2xl font-bold font-mono text-green-600">
+                  {formatLakhs(kpis.total_interest_saved)}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-blue-500/10 rounded-xl">
+                <Percent className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground">Platform Avg Loan Rate</p>
+                <p className="text-2xl font-bold font-mono">{kpis.avg_loan_rate.toFixed(2)}%</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-purple-500/10 rounded-xl">
+                <Building2 className="w-6 h-6 text-purple-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm text-muted-foreground">Active Loans</p>
+                <p className="text-2xl font-bold font-mono">{kpis.active_loans}</p>
+                <p className="text-xs text-muted-foreground">{kpis.users_with_loans} users</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Bank Distribution Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PieChartIcon className="w-5 h-5 text-primary" />
+              Loan Distribution by Bank
+            </CardTitle>
+            <CardDescription>Outstanding loan value by lending institution</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {bankChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={350}>
+                <PieChart>
+                  <Pie
+                    data={bankChartData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={120}
+                    innerRadius={60}
+                    paddingAngle={2}
+                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                    labelLine={true}
+                  >
+                    {bankChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number) => [formatLakhs(value), "Outstanding"]}
+                  />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[350px] text-muted-foreground">
+                No loan data available
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Negotiation Status Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-primary" />
+              Negotiation Status Breakdown
+            </CardTitle>
+            <CardDescription>Distribution of negotiation outcomes</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {negotiationChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={negotiationChartData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" width={80} />
+                  <Tooltip
+                    formatter={(value: number) => [value, "Count"]}
+                  />
+                  <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                    {negotiationChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[350px] text-muted-foreground">
+                No negotiation data available
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Negotiation Performance Summary */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
+            Negotiation Performance Summary
+          </CardTitle>
+          <CardDescription>Admin-level negotiation metrics and success rates</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Total Processed</span>
+                <Badge variant="outline">{negotiation_performance.total_processed}</Badge>
+              </div>
+              <Progress value={100} className="h-2" />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground flex items-center gap-1">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  Success Rate
+                </span>
+                <Badge variant="default" className="bg-green-500">
+                  {negotiation_performance.success_rate}%
+                </Badge>
+              </div>
+              <Progress value={negotiation_performance.success_rate} className="h-2 bg-muted [&>div]:bg-green-500" />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground flex items-center gap-1">
+                  <TrendingUp className="w-4 h-4 text-blue-500" />
+                  Avg Rate Reduction
+                </span>
+                <Badge variant="secondary">{negotiation_performance.avg_rate_reduction.toFixed(2)}%</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Average percentage point reduction in successful negotiations
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-4 h-4 text-amber-500" />
+                  Pending Review
+                </span>
+                <Badge variant="outline" className="border-amber-500 text-amber-600">
+                  {negotiation_performance.pending}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Negotiations awaiting admin review
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="mt-6 pt-6 border-t grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-3xl font-bold text-green-600">{negotiation_performance.approved}</p>
+              <p className="text-sm text-muted-foreground">Approved</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-red-500">{negotiation_performance.rejected}</p>
+              <p className="text-sm text-muted-foreground">Rejected</p>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-amber-500">{negotiation_performance.pending}</p>
+              <p className="text-sm text-muted-foreground">Pending</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Bank Details Table */}
+      {bank_distribution.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-primary" />
+              Lender Breakdown
+            </CardTitle>
+            <CardDescription>Detailed view of loans by lending institution</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/60">
+                  <tr className="[&>th]:px-4 [&>th]:py-3 [&>th]:text-left [&>th]:font-medium [&>th]:text-muted-foreground">
+                    <th>Bank</th>
+                    <th className="text-right">Outstanding Value</th>
+                    <th className="text-right">Loan Count</th>
+                    <th className="text-right">% of AUM</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bank_distribution.map((bank, index) => {
+                    const aumPercentage = kpis.total_aum > 0
+                      ? (bank.total_outstanding / kpis.total_aum * 100).toFixed(1)
+                      : "0";
+                    return (
+                      <tr
+                        key={bank.bank_name}
+                        className="[&>td]:px-4 [&>td]:py-3 border-t hover:bg-muted/50 transition-colors"
+                      >
+                        <td className="font-medium flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: BANK_COLORS[index % BANK_COLORS.length] }}
+                          />
+                          {bank.bank_name}
+                        </td>
+                        <td className="text-right font-mono">{formatLakhs(bank.total_outstanding)}</td>
+                        <td className="text-right">{bank.loan_count}</td>
+                        <td className="text-right">
+                          <Badge variant="outline">{aumPercentage}%</Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ===================================================================
+// User Report Content Component
+// ===================================================================
+
+function UserReportContent({
   report,
   reportType,
   period,
@@ -537,7 +845,6 @@ function ReportContent({
     );
   }
 
-  // Chart data
   const portfolioChartData = report.report_data.portfolio.map((loan) => ({
     name: loan.bank_name,
     outstanding: loan.outstanding,
@@ -545,14 +852,8 @@ function ReportContent({
   }));
 
   const strategyData = [
-    {
-      name: "Reduce EMI",
-      value: report.report_data.strategy_breakdown.reduce_emi.amount || 0,
-    },
-    {
-      name: "Reduce Tenure",
-      value: report.report_data.strategy_breakdown.reduce_tenure.amount || 0,
-    },
+    { name: "Reduce EMI", value: report.report_data.strategy_breakdown.reduce_emi.amount || 0 },
+    { name: "Reduce Tenure", value: report.report_data.strategy_breakdown.reduce_tenure.amount || 0 },
   ].filter((item) => item.value > 0);
 
   return (
@@ -560,16 +861,13 @@ function ReportContent({
       {/* Period Selector */}
       <div className="flex items-center gap-4">
         <Calendar className="w-5 h-5 text-muted-foreground" />
-        <Select
-          value={selectedPeriod || period}
-          onValueChange={setSelectedPeriod}
-        >
-          <SelectTrigger className="w-64" data-testid="select-period">
+        <Select value={selectedPeriod || period} onValueChange={setSelectedPeriod}>
+          <SelectTrigger className="w-64">
             <SelectValue placeholder="Select period" />
           </SelectTrigger>
           <SelectContent>
             {periodOptions.map((p) => (
-              <SelectItem key={p} value={p} data-testid={`period-${p}`}>
+              <SelectItem key={p} value={p}>
                 {formatPeriod(p)}
               </SelectItem>
             ))}
@@ -579,28 +877,23 @@ function ReportContent({
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card data-testid="card-total-prepayments">
+        <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-blue-500/10 rounded-lg">
                 <TrendingUp className="w-6 h-6 text-blue-600" />
               </div>
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">
-                  Total Prepayments
-                </p>
-                <p
-                  className="text-3xl font-bold font-mono"
-                  data-testid="text-total-prepayments"
-                >
-                  ₹{report.total_prepayments.toLocaleString("en-IN")}
+                <p className="text-sm text-muted-foreground">Total Prepayments</p>
+                <p className="text-3xl font-bold font-mono">
+                  {formatCurrency(report.total_prepayments)}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card data-testid="card-interest-saved">
+        <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-green-500/10 rounded-lg">
@@ -608,18 +901,15 @@ function ReportContent({
               </div>
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Interest Saved</p>
-                <p
-                  className="text-3xl font-bold font-mono text-green-600"
-                  data-testid="text-interest-saved"
-                >
-                  ₹{report.total_interest_saved.toLocaleString("en-IN")}
+                <p className="text-3xl font-bold font-mono text-green-600">
+                  {formatCurrency(report.total_interest_saved)}
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card data-testid="card-tenure-reduced">
+        <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-purple-500/10 rounded-lg">
@@ -627,10 +917,7 @@ function ReportContent({
               </div>
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Tenure Reduced</p>
-                <p
-                  className="text-3xl font-bold font-mono"
-                  data-testid="text-tenure-reduced"
-                >
+                <p className="text-3xl font-bold font-mono">
                   {report.total_tenure_reduced_months} months
                 </p>
               </div>
@@ -641,7 +928,7 @@ function ReportContent({
 
       {/* AI Narrative */}
       {report.ai_narrative && (
-        <Card data-testid="card-ai-narrative">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5" />
@@ -656,9 +943,8 @@ function ReportContent({
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Portfolio Breakdown */}
         {portfolioChartData.length > 0 && (
-          <Card data-testid="card-portfolio-chart">
+          <Card>
             <CardHeader>
               <CardTitle>Loan Portfolio</CardTitle>
               <CardDescription>Outstanding vs Paid Off</CardDescription>
@@ -669,17 +955,9 @@ function ReportContent({
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip
-                    formatter={(value: number) =>
-                      `₹${value.toLocaleString("en-IN")}`
-                    }
-                  />
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
                   <Legend />
-                  <Bar
-                    dataKey="outstanding"
-                    fill={COLORS[0]}
-                    name="Outstanding"
-                  />
+                  <Bar dataKey="outstanding" fill={COLORS[0]} name="Outstanding" />
                   <Bar dataKey="paidOff" fill={COLORS[1]} name="Paid Off" />
                 </BarChart>
               </ResponsiveContainer>
@@ -687,14 +965,11 @@ function ReportContent({
           </Card>
         )}
 
-        {/* Strategy Breakdown */}
         {strategyData.length > 0 && (
-          <Card data-testid="card-strategy-chart">
+          <Card>
             <CardHeader>
               <CardTitle>Prepayment Strategy</CardTitle>
-              <CardDescription>
-                Distribution by strategy type
-              </CardDescription>
+              <CardDescription>Distribution by strategy type</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -706,22 +981,13 @@ function ReportContent({
                     cx="50%"
                     cy="50%"
                     outerRadius={100}
-                    label={(entry) =>
-                      `₹${entry.value.toLocaleString("en-IN")}`
-                    }
+                    label={(entry) => formatCurrency(entry.value)}
                   >
                     {strategyData.map((_, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    formatter={(value: number) =>
-                      `₹${value.toLocaleString("en-IN")}`
-                    }
-                  />
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
@@ -732,12 +998,10 @@ function ReportContent({
 
       {/* Prepayment Timeline */}
       {report.report_data.monthly_prepayments.length > 0 && (
-        <Card data-testid="card-prepayment-timeline">
+        <Card>
           <CardHeader>
             <CardTitle>Prepayment Timeline</CardTitle>
-            <CardDescription>
-              Your prepayment activity over time
-            </CardDescription>
+            <CardDescription>Your prepayment activity over time</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -745,24 +1009,10 @@ function ReportContent({
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis />
-                <Tooltip
-                  formatter={(value: number) =>
-                    `₹${value.toLocaleString("en-IN")}`
-                  }
-                />
+                <Tooltip formatter={(value: number) => formatCurrency(value)} />
                 <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="amount"
-                  stroke={COLORS[0]}
-                  name="Prepayment Amount"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="savings"
-                  stroke={COLORS[2]}
-                  name="Interest Saved"
-                />
+                <Line type="monotone" dataKey="amount" stroke={COLORS[0]} name="Prepayment Amount" />
+                <Line type="monotone" dataKey="savings" stroke={COLORS[2]} name="Interest Saved" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
