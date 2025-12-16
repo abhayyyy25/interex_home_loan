@@ -306,7 +306,7 @@ async def reject_negotiation(
     return negotiation
 
 
-@router.get("/admin/all", response_model=List[NegotiationResponse])
+@router.get("/admin/all/", response_model=List[NegotiationResponse])
 async def get_all_negotiations_admin(
     status_filter: Optional[str] = None,
     current_user: User = Depends(get_current_user),
