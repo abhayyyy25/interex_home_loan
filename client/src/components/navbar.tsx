@@ -1,7 +1,21 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { IndianRupee, LogOut, User, ShieldCheck } from "lucide-react";
+import {
+  IndianRupee,
+  LogOut,
+  User,
+  ShieldCheck,
+  LayoutDashboard,
+  Bell,
+  FileText,
+  BarChart3,
+  PlusCircle,
+  Calculator,
+  Bot,
+  Send,
+  Home,
+} from "lucide-react";
 import { NotificationsBell } from "@/components/notifications-bell";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -55,7 +69,7 @@ export function Navbar() {
                 <User className="w-5 h-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-64">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">
@@ -67,7 +81,8 @@ export function Navbar() {
                     {user?.email}
                   </p>
                   {isAdmin && (
-                    <Badge variant="secondary" className="w-fit mt-1 text-xs">
+                    <Badge variant="secondary" className="w-fit mt-1 text-xs gap-1">
+                      <ShieldCheck className="w-3 h-3" />
                       Administrator
                     </Badge>
                   )}
@@ -75,42 +90,72 @@ export function Navbar() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               
-              {/* Admin-specific menu items */}
+              {/* Admin-specific menu items - NO user features */}
               {isAdmin ? (
                 <>
                   <DropdownMenuItem asChild>
-                    <Link href="/admin">Admin Control Center</Link>
+                    <Link href="/admin" className="flex items-center gap-2">
+                      <LayoutDashboard className="w-4 h-4" />
+                      Admin Control Center
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/admin/negotiations">Manage Negotiations</Link>
+                    <Link href="/admin/notifications/send" className="flex items-center gap-2">
+                      <Bell className="w-4 h-4" />
+                      Admin Notifications
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/admin/notifications/send">Send Notifications</Link>
+                    <Link href="/admin/negotiations" className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Manage Negotiations
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/reports">Platform Reports</Link>
+                    <Link href="/reports" className="flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4" />
+                      Reports & Analytics
+                    </Link>
                   </DropdownMenuItem>
                 </>
               ) : (
                 /* Regular user menu items */
                 <>
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard">Dashboard</Link>
+                    <Link href="/dashboard" className="flex items-center gap-2">
+                      <Home className="w-4 h-4" />
+                      Dashboard
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/loans/add">Add Loan</Link>
+                    <Link href="/loans/add" className="flex items-center gap-2">
+                      <PlusCircle className="w-4 h-4" />
+                      Add Loan
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/calculator">Calculator</Link>
+                    <Link href="/calculator" className="flex items-center gap-2">
+                      <Calculator className="w-4 h-4" />
+                      Calculator
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/chat">AI Advisor</Link>
+                    <Link href="/chat" className="flex items-center gap-2">
+                      <Bot className="w-4 h-4" />
+                      AI Advisor
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/negotiations">Negotiations</Link>
+                    <Link href="/negotiations" className="flex items-center gap-2">
+                      <Send className="w-4 h-4" />
+                      Negotiations
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/reports">Reports</Link>
+                    <Link href="/reports" className="flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4" />
+                      Reports
+                    </Link>
                   </DropdownMenuItem>
                 </>
               )}
