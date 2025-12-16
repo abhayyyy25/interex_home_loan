@@ -41,10 +41,9 @@ export default function AdminNegotiations() {
     queryKey: ["/api/negotiations/admin/all", statusFilter],
     queryFn: async () => {
       const url = statusFilter === "all" 
-        ? "/api/negotiations/admin/all"
-        : `/api/negotiations/admin/all?status_filter=${statusFilter}`;
-      const response = await fetch(url, { credentials: "include" });
-      if (!response.ok) throw new Error("Failed to fetch negotiations");
+        ? "/api/negotiations/admin/all/"
+        : `/api/negotiations/admin/all/?status_filter=${statusFilter}`;
+      const response = await apiRequest("GET", url);
       return response.json();
     },
   });
