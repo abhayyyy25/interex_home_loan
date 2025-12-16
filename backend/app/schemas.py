@@ -31,6 +31,11 @@ class NotificationType(str, Enum):
     MILESTONE = "milestone"
     NEGOTIATION_UPDATE = "negotiation_update"
     EMI_REMINDER = "emi_reminder"
+    # New types for admin notifications
+    SYSTEM = "system"
+    LOAN = "loan"
+    NEGOTIATION = "negotiation"
+    PROMOTION = "promotion"
 
 
 class PrepaymentStrategy(str, Enum):
