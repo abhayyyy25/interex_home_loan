@@ -322,9 +322,9 @@ export default function AdminDashboard() {
               </h2>
               <Link href="/admin/negotiations">
                 <Button variant="outline" size="sm" className="gap-1">
-                  View all
-                  <ArrowRight className="w-4 h-4" />
-                </Button>
+                View all
+                <ArrowRight className="w-4 h-4" />
+              </Button>
               </Link>
             </div>
 
@@ -389,49 +389,49 @@ export default function AdminDashboard() {
             <Card>
               <CardContent className="p-0">
                 {usersLoading ? (
-                  <div className="p-4 space-y-3">
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                  </div>
+                   <div className="p-4 space-y-3">
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                      <Skeleton className="h-8 w-full" />
+                   </div>
                 ) : (
-                  <div className="min-w-full overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted/60">
-                        <tr className="[&>th]:px-4 [&>th]:py-3 [&>th]:text-left [&>th]:font-medium [&>th]:text-muted-foreground">
-                          <th>User</th>
-                          <th>Email</th>
-                          <th>Role</th>
-                          <th>Tier</th>
-                          <th>Loans</th>
-                          <th>Joined</th>
+                <div className="min-w-full overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted/60">
+                      <tr className="[&>th]:px-4 [&>th]:py-3 [&>th]:text-left [&>th]:font-medium [&>th]:text-muted-foreground">
+                        <th>User</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Tier</th>
+                        <th>Loans</th>
+                        <th>Joined</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map((u) => (
+                        <tr
+                          key={u.id}
+                          className="[&>td]:px-4 [&>td]:py-3 border-t hover:bg-muted/50 transition-colors"
+                        >
+                          <td className="font-medium">{u.name}</td>
+                          <td className="text-muted-foreground">{u.email}</td>
+                          <td>
+                             <Badge variant={u.role === "admin" ? "default" : "secondary"}>
+                               {u.role}
+                             </Badge>
+                          </td>
+                          <td>
+                            <Badge variant="outline">{u.tier}</Badge>
+                          </td>
+                          <td>{u.loan_count}</td>
+                          <td className="text-muted-foreground text-xs">
+                            {new Date(u.joined).toLocaleDateString()}
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {users.map((u) => (
-                          <tr
-                            key={u.id}
-                            className="[&>td]:px-4 [&>td]:py-3 border-t hover:bg-muted/50 transition-colors"
-                          >
-                            <td className="font-medium">{u.name}</td>
-                            <td className="text-muted-foreground">{u.email}</td>
-                            <td>
-                              <Badge variant={u.role === "admin" ? "default" : "secondary"}>
-                                {u.role}
-                              </Badge>
-                            </td>
-                            <td>
-                              <Badge variant="outline">{u.tier}</Badge>
-                            </td>
-                            <td>{u.loan_count}</td>
-                            <td className="text-muted-foreground text-xs">
-                              {new Date(u.joined).toLocaleDateString()}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
                 )}
               </CardContent>
             </Card>

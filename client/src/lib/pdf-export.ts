@@ -108,34 +108,43 @@ function addKPICard(
   label: string,
   value: string,
   subtext?: string,
-  color: string = COLORS.primary
+  valueColor?: string
 ): void {
-  // Card background
-  doc.setFillColor(249, 250, 251);
-  doc.roundedRect(x, y, width, 35, 3, 3, "F");
+  // Card background with border
+  doc.setDrawColor(229, 231, 235);
+  doc.setLineWidth(0.5);
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(x, y, width, 35, 3, 3, "FD");
   
-  // Left accent
-  doc.setFillColor(color);
-  doc.rect(x, y + 5, 3, 25, "F");
-  
-  // Label
-  doc.setFontSize(9);
+  // Label (centered at top)
+  doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(107, 114, 128);
-  doc.text(label, x + 8, y + 12);
+  const labelWidth = doc.getTextWidth(label);
+  doc.text(label, x + (width - labelWidth) / 2, y + 10);
   
-  // Value
-  doc.setFontSize(16);
+  // Value (centered, bold, larger)
+  doc.setFontSize(18);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(31, 41, 55);
-  doc.text(value, x + 8, y + 24);
+  if (valueColor) {
+    // Parse RGB from hex color
+    const r = parseInt(valueColor.slice(1, 3), 16);
+    const g = parseInt(valueColor.slice(3, 5), 16);
+    const b = parseInt(valueColor.slice(5, 7), 16);
+    doc.setTextColor(r, g, b);
+  } else {
+    doc.setTextColor(31, 41, 55);
+  }
+  const valueWidth = doc.getTextWidth(value);
+  doc.text(value, x + (width - valueWidth) / 2, y + 23);
   
-  // Subtext
+  // Subtext (centered at bottom)
   if (subtext) {
-    doc.setFontSize(8);
+    doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(107, 114, 128);
-    doc.text(subtext, x + 8, y + 31);
+    const subtextWidth = doc.getTextWidth(subtext);
+    doc.text(subtext, x + (width - subtextWidth) / 2, y + 31);
   }
 }
 
@@ -189,10 +198,10 @@ export async function exportAdminReportPDF(
   
   const kpiWidth = 40;
   const kpiGap = 3;
-  addKPICard(doc, 20, y, kpiWidth, "Total AUM", data.kpis.totalAUM, undefined, COLORS.primary);
-  addKPICard(doc, 20 + kpiWidth + kpiGap, y, kpiWidth, "Interest Saved", data.kpis.interestSaved, undefined, COLORS.success);
-  addKPICard(doc, 20 + (kpiWidth + kpiGap) * 2, y, kpiWidth, "Avg Loan Rate", data.kpis.avgRate, undefined, COLORS.warning);
-  addKPICard(doc, 20 + (kpiWidth + kpiGap) * 3, y, kpiWidth, "Active Loans", String(data.kpis.activeLoans), `${data.kpis.usersWithLoans} users`, COLORS.purple);
+  addKPICard(doc, 20, y, kpiWidth, "Total AUM", data.kpis.totalAUM);
+  addKPICard(doc, 20 + kpiWidth + kpiGap, y, kpiWidth, "Interest Saved", data.kpis.interestSaved, "from negotiations", COLORS.success);
+  addKPICard(doc, 20 + (kpiWidth + kpiGap) * 2, y, kpiWidth, "Avg Loan Rate", data.kpis.avgRate);
+  addKPICard(doc, 20 + (kpiWidth + kpiGap) * 3, y, kpiWidth, "Active Loans", String(data.kpis.activeLoans), `${data.kpis.usersWithLoans} users`);
   
   y += 45;
   
@@ -354,9 +363,9 @@ export async function exportUserReportPDF(
   const kpiWidth = 40;
   const kpiGap = 3;
   addKPICard(doc, 20, y, kpiWidth, "Interest Saved", data.lifetimeSavings.interestSaved, undefined, COLORS.success);
-  addKPICard(doc, 20 + kpiWidth + kpiGap, y, kpiWidth, "Total Prepayments", data.lifetimeSavings.totalPrepayments, undefined, COLORS.primary);
-  addKPICard(doc, 20 + (kpiWidth + kpiGap) * 2, y, kpiWidth, "Months Saved", String(data.lifetimeSavings.monthsSaved), undefined, COLORS.purple);
-  addKPICard(doc, 20 + (kpiWidth + kpiGap) * 3, y, kpiWidth, "Loan Completed", data.lifetimeSavings.completion, undefined, COLORS.warning);
+  addKPICard(doc, 20 + kpiWidth + kpiGap, y, kpiWidth, "Total Prepayments", data.lifetimeSavings.totalPrepayments);
+  addKPICard(doc, 20 + (kpiWidth + kpiGap) * 2, y, kpiWidth, "Months Saved", String(data.lifetimeSavings.monthsSaved), "months saved");
+  addKPICard(doc, 20 + (kpiWidth + kpiGap) * 3, y, kpiWidth, "Loan Completed", data.lifetimeSavings.completion);
   
   y += 50;
   

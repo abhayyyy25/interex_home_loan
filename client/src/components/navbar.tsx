@@ -99,19 +99,19 @@ export function Navbar() {
                       Admin Control Center
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+              <DropdownMenuItem asChild>
                     <Link href="/admin/notifications/send" className="flex items-center gap-2">
                       <Bell className="w-4 h-4" />
                       Admin Notifications
                     </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                     <Link href="/admin/negotiations" className="flex items-center gap-2">
                       <FileText className="w-4 h-4" />
                       Manage Negotiations
                     </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                     <Link href="/reports" className="flex items-center gap-2">
                       <BarChart3 className="w-4 h-4" />
                       Reports & Analytics
@@ -126,25 +126,25 @@ export function Navbar() {
                       <Home className="w-4 h-4" />
                       Dashboard
                     </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                     <Link href="/loans/add" className="flex items-center gap-2">
                       <PlusCircle className="w-4 h-4" />
                       Add Loan
                     </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                     <Link href="/calculator" className="flex items-center gap-2">
                       <Calculator className="w-4 h-4" />
                       Calculator
                     </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                     <Link href="/chat" className="flex items-center gap-2">
                       <Bot className="w-4 h-4" />
                       AI Advisor
                     </Link>
-                  </DropdownMenuItem>
+              </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link href="/negotiations" className="flex items-center gap-2">
                       <Send className="w-4 h-4" />

@@ -243,7 +243,7 @@ export default function Reports() {
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/reports/summary/");
       return await res.json();
-    },
+    },    
     enabled: !isAdmin,
   });
 
@@ -464,49 +464,42 @@ export default function Reports() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-green-500/10 rounded-lg">
-                  <DollarSign className="w-5 h-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-green-600">
+              <Card className="border-2">
+                <CardContent className="pt-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-2">Interest Saved</p>
+                  <p className="text-3xl font-bold text-green-600">
                     {formatCurrency(summary.lifetime.total_interest_saved)}
                   </p>
-                  <p className="text-sm text-muted-foreground">Interest Saved</p>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-blue-500/10 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">
+              <Card className="border-2">
+                <CardContent className="pt-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-2">Total Prepayments</p>
+                  <p className="text-3xl font-bold">
                     {formatCurrency(summary.lifetime.total_prepayments)}
                   </p>
-                  <p className="text-sm text-muted-foreground">Total Prepayments</p>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-purple-500/10 rounded-lg">
-                  <Clock className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{summary.lifetime.total_tenure_reduced_months}</p>
-                  <p className="text-sm text-muted-foreground">Months Saved</p>
-                </div>
-              </div>
+              <Card className="border-2">
+                <CardContent className="pt-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-2">Tenure Reduced</p>
+                  <p className="text-3xl font-bold">
+                    {summary.lifetime.total_tenure_reduced_months}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">months saved</p>
+                </CardContent>
+              </Card>
 
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-orange-500/10 rounded-lg">
-                  <FileText className="w-5 h-5 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{summary.portfolio.completion_percentage.toFixed(1)}%</p>
-                  <p className="text-sm text-muted-foreground">Loan Completed</p>
-                </div>
-              </div>
+              <Card className="border-2">
+                <CardContent className="pt-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-2">Loan Completed</p>
+                  <p className="text-3xl font-bold">
+                    {summary.portfolio.completion_percentage.toFixed(1)}%
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           </CardContent>
         </Card>
@@ -613,62 +606,41 @@ function AdminReportsView({
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-primary/10 rounded-xl">
-                <Briefcase className="w-6 h-6 text-primary" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Total Outstanding (AUM)</p>
-                <p className="text-2xl font-bold font-mono">{formatLakhs(kpis.total_aum)}</p>
-              </div>
-            </div>
+        <Card className="border-2">
+          <CardContent className="pt-6 text-center">
+            <p className="text-sm text-muted-foreground mb-2">Total Outstanding (AUM)</p>
+            <p className="text-3xl font-bold font-mono">
+              {formatLakhs(kpis.total_aum)}
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-green-500/20 bg-gradient-to-br from-green-500/5 to-transparent">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-green-500/10 rounded-xl">
-                <DollarSign className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Platform Interest Saved</p>
-                <p className="text-2xl font-bold font-mono text-green-600">
-                  {formatLakhs(kpis.total_interest_saved)}
-                </p>
-              </div>
-            </div>
+        <Card className="border-2">
+          <CardContent className="pt-6 text-center">
+            <p className="text-sm text-muted-foreground mb-2">Platform Interest Saved</p>
+            <p className="text-3xl font-bold font-mono text-green-600">
+              {formatLakhs(kpis.total_interest_saved)}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">from all negotiations</p>
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-500/10 rounded-xl">
-                <Percent className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Platform Avg Loan Rate</p>
-                <p className="text-2xl font-bold font-mono">{kpis.avg_loan_rate.toFixed(2)}%</p>
-              </div>
-            </div>
+        <Card className="border-2">
+          <CardContent className="pt-6 text-center">
+            <p className="text-sm text-muted-foreground mb-2">Platform Avg Loan Rate</p>
+            <p className="text-3xl font-bold font-mono">
+              {kpis.avg_loan_rate.toFixed(2)}%
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="border-2 border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-purple-500/10 rounded-xl">
-                <Building2 className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Active Loans</p>
-                <p className="text-2xl font-bold font-mono">{kpis.active_loans}</p>
-                <p className="text-xs text-muted-foreground">{kpis.users_with_loans} users</p>
-              </div>
-            </div>
+        <Card className="border-2">
+          <CardContent className="pt-6 text-center">
+            <p className="text-sm text-muted-foreground mb-2">Active Loans</p>
+            <p className="text-3xl font-bold font-mono">
+              {kpis.active_loans}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">{kpis.users_with_loans} users</p>
           </CardContent>
         </Card>
       </div>
@@ -950,51 +922,31 @@ function UserReportContent({
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-blue-500/10 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Total Prepayments</p>
-                <p className="text-3xl font-bold font-mono">
-                  {formatCurrency(report.total_prepayments)}
-                </p>
-              </div>
-            </div>
+        <Card className="border-2">
+          <CardContent className="pt-6 text-center">
+            <p className="text-sm text-muted-foreground mb-2">Total Prepayments</p>
+            <p className="text-3xl font-bold font-mono">
+              {formatCurrency(report.total_prepayments)}
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-green-500/10 rounded-lg">
-                <DollarSign className="w-6 h-6 text-green-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Interest Saved</p>
-                <p className="text-3xl font-bold font-mono text-green-600">
-                  {formatCurrency(report.total_interest_saved)}
-                </p>
-              </div>
-            </div>
+        <Card className="border-2">
+          <CardContent className="pt-6 text-center">
+            <p className="text-sm text-muted-foreground mb-2">Interest Saved</p>
+            <p className="text-3xl font-bold font-mono text-green-600">
+              {formatCurrency(report.total_interest_saved)}
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-purple-500/10 rounded-lg">
-                <Clock className="w-6 h-6 text-purple-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Tenure Reduced</p>
-                <p className="text-3xl font-bold font-mono">
-                  {report.total_tenure_reduced_months} months
-                </p>
-              </div>
-            </div>
+        <Card className="border-2">
+          <CardContent className="pt-6 text-center">
+            <p className="text-sm text-muted-foreground mb-2">Tenure Reduced</p>
+            <p className="text-3xl font-bold font-mono">
+              {report.total_tenure_reduced_months}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">months saved</p>
           </CardContent>
         </Card>
       </div>

@@ -122,12 +122,12 @@ export default function AdminNegotiations() {
   return (
     <AdminLayout>
       <div className="p-6 space-y-6 max-w-7xl mx-auto">
-        <div>
-          <h1 className="text-3xl font-bold">Negotiation Management</h1>
-          <p className="text-muted-foreground">
-            Review and approve customer negotiation letters
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold">Negotiation Management</h1>
+        <p className="text-muted-foreground">
+          Review and approve customer negotiation letters
+        </p>
+      </div>
 
       <div className="grid grid-cols-3 gap-4">
         <Card>
@@ -318,7 +318,7 @@ export default function AdminNegotiations() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </div>
+    </div>
     </AdminLayout>
   );
 }
